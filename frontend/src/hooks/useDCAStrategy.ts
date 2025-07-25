@@ -56,6 +56,9 @@ export function useDCAStrategy() {
     }
   }, [transactions, strategies, ethPrice])
 
+  // Выделяем активную стратегию для возврата наружу
+  const activeStrategy = useMemo(() => strategies.find(s => s.isActive) || null, [strategies])
+
   /**
    * Create a new DCA strategy
    */
@@ -180,6 +183,7 @@ export function useDCAStrategy() {
     claimETH,
     updateStrategy,
     deleteStrategy,
-    addTransaction
+    addTransaction,
+    activeStrategy
   }
 }

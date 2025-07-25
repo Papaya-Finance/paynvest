@@ -96,7 +96,7 @@ export function WalletButton() {
           className="font-mono hover:bg-muted/80 transition-colors flex items-center gap-2 px-2"
         >
           <div className="flex items-center space-x-2">
-            <span className="md:inline">{formatAddress(address || '')}</span>
+            <span className="md:inline text-xs">{formatAddress(address || '')}</span>
             <ChevronDown className="h-4 w-4" />
           </div>
         </Button>

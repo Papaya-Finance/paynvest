@@ -32,6 +32,8 @@ export interface WalletState {
   }
 }
 
+export type { WalletBalance } from '@/hooks/useWalletBalance'
+
 export type ThemeMode = 'light' | 'dark' | 'system'
 
 export interface AppSection {

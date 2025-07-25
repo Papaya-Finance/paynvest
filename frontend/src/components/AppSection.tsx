@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, DollarSign, Zap, BarChart3, TrendingUp, Coins, Activity, Loader2 } from 'lucide-react'
+import { ArrowLeft, DollarSign, Zap, BarChart3, TrendingUp, Coins, Activity, Loader2, HandCoins, CircleDollarSign } from 'lucide-react'
 import InvestmentInput from './InvestmentInput'
 import { TransactionHistory } from './TransactionHistory'
 import { useDCAStrategy } from '@/hooks/useDCAStrategy'
 import { useAppKitAccount } from '@reown/appkit/react'
+import { useWalletBalance } from '@/hooks/useWalletBalance'
 
 interface AppSectionProps {
   onBack: () => void
@@ -28,8 +29,12 @@ export function AppSection({ onBack }: AppSectionProps) {
     isPriceLoading,
     createStrategy,
     stopStrategy,
-    claimETH
+    claimETH,
+    activeStrategy // добавлено
   } = useDCAStrategy()
+  
+  
+  const { eth, usdt, usdc} = useWalletBalance()
   
   const [showTransactions, setShowTransactions] = useState(false)
   const [amount, setAmount] = useState('');
@@ -76,7 +81,7 @@ export function AppSection({ onBack }: AppSectionProps) {
   }
 
   const formatETH = (amount: number) => {
-    return `${amount.toFixed(6)} ETH`
+    return `${amount.toFixed(6)}`
   }
 
   return (
@@ -99,95 +104,37 @@ export function AppSection({ onBack }: AppSectionProps) {
           
           <div className="mb-8">
             <h2 className="mb-4 text-3xl font-bold">DCA Dashboard</h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-md">
               Create and manage your dollar-cost averaging strategies for Ethereum
             </p>
           </div>
 
-          {/* Metrics Cards */}
-          <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-l-4 border-l-blue-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Invested</p>
-                    <p className="text-2xl font-bold">{formatCurrency(portfolioMetrics.totalInvested)}</p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-purple-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">ETH Balance</p>
-                    <p className="text-2xl font-bold">{formatETH(portfolioMetrics.totalETH)}</p>
-                  </div>
-                  <Coins className="h-8 w-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-green-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Current ETH Price</p>
-                    <p className="text-2xl font-bold flex items-center">
-                      {isPriceLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                      ) : null}
-                      {formatCurrency(ethPrice)}
-                    </p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-orange-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Portfolio Value</p>
-                    <p className="text-2xl font-bold">{formatCurrency(portfolioMetrics.currentValue)}</p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-orange-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8">
             <div className="lg:col-span-2 space-y-6">
               {/* Investment Input */}
-              <Card>
+              <Card className="border border-muted shadow-lg gap-2">
                 <CardHeader>
                   <CardTitle>
-                    {portfolioMetrics.hasActiveStrategy ? 'Active Strategy' : 'Create New Strategy'}
+                    Investment Amount
                   </CardTitle>
-                  <CardDescription>
-                    {portfolioMetrics.hasActiveStrategy 
-                      ? 'Manage your active DCA strategy' 
-                      : 'Set up automated ETH purchases with your preferred amount and frequency'
-                    }
-                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="mt-1">
                   {!portfolioMetrics.hasActiveStrategy ? (
                     <>
                       <InvestmentInput
                         value={amount}
                         onChange={setAmount}
-                        placeholder="Enter amount"
-                        currency="USD"
-                        maxDecimals={4}
+                        placeholder="$0"
                         fontSize={36}
-                        fontWeight={700}
-                        classNameNumber="text-primary"
+                        fontWeight={600}
+                        className='!bg-background'
+                        classNameContainer='bg-background'
                       />
+                      <div className="flex items-center mb-2">
+                        <span className="text-xs text-muted-foreground">
+                          Balance: {usdt?.formatted} USDT
+                        </span>
+                      </div>
                       <Button
                         onClick={() => {
                           const num = parseFloat(amount.replace(',', '.'));
@@ -214,7 +161,13 @@ export function AppSection({ onBack }: AppSectionProps) {
                           <div>
                             <h4 className="font-semibold">Strategy Active</h4>
                             <p className="text-sm text-muted-foreground">
-                              Your DCA strategy is running automatically
+                              {activeStrategy ? (
+                                <>
+                                  Strategy: <span className="font-semibold">{activeStrategy.amount} {activeStrategy.token}</span> every <span className="font-semibold">{activeStrategy.frequency}</span>
+                                </>
+                              ) : (
+                                'Your DCA strategy is running automatically'
+                              )}
                             </p>
                           </div>
                           <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
@@ -260,12 +213,69 @@ export function AppSection({ onBack }: AppSectionProps) {
                 </CardContent>
               </Card>
 
+              {/* Metrics Cards */}
+              <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                <Card className="border border-muted bg-muted shadow-none">
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Total Invested</p>
+                        <p className="text-xl font-bold">{formatCurrency(portfolioMetrics.totalInvested)}</p>
+                      </div>
+                      {/* <CircleDollarSign className="h-8 w-8 text-primary" /> */}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border border-purple-500 bg-purple-100 dark:bg-purple-900/30 shadow-none">
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-primary/80">ETH Balance</p>
+                        <p className="text-xl font-bold">{formatETH(portfolioMetrics.totalETH)}</p>
+                      </div>
+                      {/* <HandCoins className="h-4 w-4 text-primary" /> */}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border border-muted bg-muted shadow-none">
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Current ETH Price</p>
+                        <p className="text-xl font-bold flex items-center">
+                          {isPriceLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          {formatCurrency(ethPrice)}
+                        </p>
+                      </div>
+                      {/* <TrendingUp className="h-4 w-4 text-primary" /> */}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border border-muted bg-muted shadow-none">
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Portfolio Value</p>
+                        <p className="text-xl font-bold">{formatCurrency(portfolioMetrics.currentValue)}</p>
+                      </div>
+                      {/* <BarChart3 className="h-4 w-4 text-primary" /> */}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+          
+
               {/* Transaction History */}
-              {showTransactions && <TransactionHistory transactions={transactions} />}
+              <TransactionHistory transactions={transactions} />
             </div>
             
             <div className="space-y-6">
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Zap className="mr-2 h-5 w-5" />
@@ -289,7 +299,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
 
               <Card>
                 <CardHeader>
