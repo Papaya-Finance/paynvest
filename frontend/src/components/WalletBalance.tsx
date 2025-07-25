@@ -1,9 +1,9 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Wallet, Loader2, Coins } from 'lucide-react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
+import type { WalletBalance as WalletBalanceType } from '@/hooks/useWalletBalance'
 
 interface WalletBalanceProps {
   showTitle?: boolean
@@ -30,7 +30,7 @@ export function WalletBalance({
     return null
   }
 
-  const formatBalance = (balance: any, decimals: number = 4) => {
+  const formatBalance = (balance: WalletBalanceType['eth'] | WalletBalanceType['usdt'] | WalletBalanceType['usdc'], decimals: number = 4) => {
     if (!balance) return '0'
     const value = parseFloat(balance.formatted)
     return value.toFixed(decimals)

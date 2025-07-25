@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu'
-import { useAppKit } from '@reown/appkit/react'
-import { Copy, LogOut, Wallet, ChevronDown, Loader2, Check, PlugZap } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useAppKitAccount } from '@reown/appkit/react'
+import { Copy, LogOut, ChevronDown, Loader2, Check, PlugZap } from 'lucide-react'
 import { toast } from 'sonner'
-import { ThemeToggle } from './ThemeToggle'
 import { useDisconnect } from 'wagmi'
 
 /**
@@ -14,8 +13,7 @@ import { useDisconnect } from 'wagmi'
  * Handles wallet connection, address display, and user actions
  */
 export function WalletButton() {
-  const { open } = useAppKit()
-  const { address, isConnected } = require('@reown/appkit/react').useAppKitAccount();
+  const { address, isConnected } = useAppKitAccount();
   const [isCopied, setIsCopied] = useState(false)
   const { disconnect } = useDisconnect();
 
@@ -68,7 +66,7 @@ export function WalletButton() {
       <>
         {/* Desktop button */}
         <Button 
-          onClick={() => open()} 
+          onClick={() => {}} 
           variant="default"
           className="  hidden md:flex items-center gap-2"
         >
@@ -76,7 +74,7 @@ export function WalletButton() {
         </Button>
         {/* Mobile icon button */}
         <Button
-          onClick={() => open()}
+          onClick={() => {}}
           variant="default"
           className="md:hidden flex items-center justify-center w-9 h-9 p-0"
           aria-label="Connect Wallet"

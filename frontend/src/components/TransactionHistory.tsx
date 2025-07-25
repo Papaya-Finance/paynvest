@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Transaction } from '@/types'
-import { ExternalLink, Clock } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 
 interface TransactionHistoryProps {
   transactions: Transaction[]

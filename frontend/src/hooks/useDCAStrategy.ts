@@ -59,6 +59,14 @@ export function useDCAStrategy() {
   // Выделяем активную стратегию для возврата наружу
   const activeStrategy = useMemo(() => strategies.find(s => s.isActive) || null, [strategies])
 
+  const updateStrategy = useCallback((id: string, updates: Partial<DCAStrategy>) => {
+    setStrategies(prev => 
+      prev.map(strategy => 
+        strategy.id === id ? { ...strategy, ...updates } : strategy
+      )
+    )
+  }, [setStrategies])
+
   /**
    * Create a new DCA strategy
    */
@@ -114,7 +122,7 @@ export function useDCAStrategy() {
     } finally {
       setIsLoading(false)
     }
-  }, [strategies])
+  }, [strategies, updateStrategy])
 
   /**
    * Claim accumulated ETH
@@ -139,14 +147,6 @@ export function useDCAStrategy() {
       setIsLoading(false)
     }
   }, [portfolioMetrics.totalETH])
-
-  const updateStrategy = useCallback((id: string, updates: Partial<DCAStrategy>) => {
-    setStrategies(prev => 
-      prev.map(strategy => 
-        strategy.id === id ? { ...strategy, ...updates } : strategy
-      )
-    )
-  }, [setStrategies])
 
   const deleteStrategy = useCallback((id: string) => {
     setStrategies(prev => prev.filter(strategy => strategy.id !== id))

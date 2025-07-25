@@ -390,10 +390,8 @@ export default function InvestmentInput({
       );
     }
     // Маппинг индексов: raw value -> displayArr (цифры и запятые)
-    let rawIdx = 0;
     return displayArr.map(({ char, key }, index) => {
       const isDigit = key.startsWith('digit-');
-      if (isDigit) rawIdx++;
       return (
         <span
           key={key}

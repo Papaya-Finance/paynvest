@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, DollarSign, Zap, BarChart3, TrendingUp, Coins, Activity, Loader2, HandCoins, CircleDollarSign } from 'lucide-react'
+import { ArrowLeft, Activity, Loader2 } from 'lucide-react'
 import InvestmentInput from './InvestmentInput'
 import { TransactionHistory } from './TransactionHistory'
 import { useDCAStrategy } from '@/hooks/useDCAStrategy'
@@ -34,9 +34,8 @@ export function AppSection({ onBack }: AppSectionProps) {
   } = useDCAStrategy()
   
   
-  const { eth, usdt, usdc} = useWalletBalance()
+  const { usdt } = useWalletBalance()
   
-  const [showTransactions, setShowTransactions] = useState(false)
   const [amount, setAmount] = useState('');
 
   const handleCreateStrategy = async (

@@ -20,17 +20,6 @@ const metadata = {
   icons: ['https://paynvest.com/icon.png']
 }
 
-const modal = createAppKit({
-  adapters: [wagmiAdapter],
-  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-  networks: [mainnet],
-  defaultNetwork: mainnet,
-  metadata,
-  features: {
-    analytics: true
-  }
-})
-
 interface ProvidersProps {
   children: React.ReactNode
 }
