@@ -10,7 +10,7 @@ import { ThemeToggle } from './ThemeToggle'
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+      <div className="flex h-16 items-center justify-between px-4">
         {/* Logo Section */}
         <div className="flex items-center space-x-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg">
@@ -23,8 +23,8 @@ export function Header() {
         </div>
         
         {/* Actions Section */}
-        <div className="flex items-center space-x-2 md:space-x-4">
-          <div className="hidden md:block">
+        <div className="flex items-center space-x-2">
+          <div className="md:block">
             <ThemeToggle />
           </div>
           <WalletButton />

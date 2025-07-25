@@ -100,7 +100,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="relative overflow-x-hidden min-h-[calc(100vh-4rem)]">
+    <div className="relative overflow-hidden h-[calc(100vh-4.2rem)]">
       {/* Hero Section */}
       <div
         ref={heroRef}
