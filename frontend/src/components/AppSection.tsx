@@ -8,7 +8,7 @@ import { ArrowLeft, Activity, Loader2 } from 'lucide-react'
 import InvestmentInput from './InvestmentInput'
 import { TransactionHistory } from './TransactionHistory'
 import { useDCAStrategy } from '@/hooks/useDCAStrategy'
-import { useAppKitAccount } from '@reown/appkit/react'
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
 
 interface AppSectionProps {
@@ -21,6 +21,7 @@ interface AppSectionProps {
  */
 export function AppSection({ onBack }: AppSectionProps) {
   const { isConnected } = useAppKitAccount()
+  const { open } = useAppKit();
   const { 
     portfolioMetrics, 
     transactions, 
@@ -134,23 +135,26 @@ export function AppSection({ onBack }: AppSectionProps) {
                           Balance: {usdt?.formatted} USDT
                         </span>
                       </div>
-                      <Button
-                        onClick={() => {
-                          const num = parseFloat(amount.replace(',', '.'));
-                          if (!isNaN(num)) {
-                            handleCreateStrategy(num, 'USDT', 'weekly');
-                          }
-                        }}
-                        disabled={!amount || isNaN(parseFloat(amount))}
+                      {!isConnected ? (
+                        <Button
+                        onClick={() => {open()}}
+                        variant="default"
+                        className="w-full"
                       >
-                        Create Strategy
+                        Connect Wallet
                       </Button>
-                      {!isConnected && (
-                        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-                          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                            Please connect your wallet to create a DCA strategy
-                          </p>
-                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            const num = parseFloat(amount.replace(',', '.'));
+                            if (!isNaN(num)) {
+                              handleCreateStrategy(num, 'USDT', 'weekly');
+                            }
+                          }}
+                          disabled={!amount || isNaN(parseFloat(amount))}
+                        >
+                          Create Strategy
+                        </Button>
                       )}
                     </>
                   ) : (
@@ -176,6 +180,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
+                        {isConnected ? (
                         <Button 
                           variant="destructive" 
                           onClick={handleStopStrategy}
@@ -191,7 +196,14 @@ export function AppSection({ onBack }: AppSectionProps) {
                             'Stop Strategy'
                           )}
                         </Button>
-                        
+                      ) : (
+                        <Button
+                          onClick={() => {open()}}
+                          variant="default"
+                        >
+                          Connect Wallet
+                        </Button>
+                      )}
                         <Button 
                           onClick={handleClaimETH}
                           disabled={isLoading || portfolioMetrics.totalETH === 0}
