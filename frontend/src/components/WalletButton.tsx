@@ -70,7 +70,7 @@ export function WalletButton() {
         <Button 
           onClick={() => open()} 
           variant="default"
-          className="font-semibold hidden md:flex items-center gap-2"
+          className="  hidden md:flex items-center gap-2"
         >
           Connect Wallet
         </Button>
