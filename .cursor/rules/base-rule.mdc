@@ -1,0 +1,214 @@
+---
+alwaysApply: true
+---
+# PAYNVEST Cursor Rules
+
+## Core Code Principles
+
+### TypeScript
+- ALWAYS use strict typing
+- Avoid `any`, use specific types
+- Create interfaces for all component props
+- Export types from `src/types/index.ts`
+
+### React Components
+- Use functional components with hooks
+- Destructure props in function parameters
+- Use `React.FC` only when necessary
+- Group hooks at the beginning of component
+
+### Naming Conventions
+- Components: PascalCase (e.g., `WalletButton`)
+- Functions/variables: camelCase (e.g., `handleConnect`)
+- Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_AMOUNT`)
+- Component files: PascalCase.tsx
+- Utilities/hooks: camelCase.ts
+
+### File Structure
+- Imports order: React → third-party libraries → local components → types
+- Default export for components
+- Named export for utilities and hooks
+
+### Comments
+- JSDoc for all exported functions and components
+- Inline comments for complex logic
+- TODO comments with author and date
+
+### CSS/Tailwind
+- Use `cn()` utility for combining classes
+- Group Tailwind classes logically: layout → typography → colors → effects
+- Use CSS variables for themes from shadcn
+- Avoid inline styles, prefer Tailwind classes
+
+### Web3 Integration
+- Handle all states: loading, success, error
+- Use toast notifications for all Web3 operations
+- Properly type contracts and transactions
+- Handle edge cases (no wallet, wrong network)
+
+### Error Handling
+- Always wrap async operations in try-catch
+- Provide user-friendly error messages
+- Log errors to console for development
+
+### Performance
+- Use `useCallback` for functions in dependencies
+- Use `useMemo` for heavy computations
+- Avoid unnecessary re-renders
+
+## Code Examples
+
+### Component Structure:
+```tsx
+"use client";
+
+import React, { useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { ComponentProps } from "@/types";
+
+/**
+ * ComponentName - component description
+ * 
+ * @param prop1 - prop description
+ * @param prop2 - prop description
+ */
+interface ComponentNameProps {
+  prop1: string;
+  prop2?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export default function ComponentName({
+  prop1,
+  prop2 = false,
+  className,
+  children,
+}: ComponentNameProps) {
+  // State
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Handlers
+  const handleClick = useCallback(() => {
+    // Logic here
+  }, []);
+
+  return (
+    <div className={cn("default-classes", className)}>
+      {children}
+    </div>
+  );
+}
+```
+
+### Hook:
+```tsx
+import { useState, useCallback, useEffect } from "react";
+import type { HookReturnType } from "@/types";
+
+/**
+ * useCustomHook - hook description
+ * 
+ * @param param - parameter description
+ * @returns object with state and methods
+ */
+export function useCustomHook(param: string): HookReturnType {
+  const [state, setState] = useState();
+
+  const method = useCallback(() => {
+    // Logic
+  }, [param]);
+
+  return {
+    state,
+    method,
+  };
+}
+```
+
+### Utility:
+```tsx
+/**
+ * Function description
+ * 
+ * @param param1 - description
+ * @param param2 - description
+ * @returns result
+ */
+export function utilityFunction(param1: string, param2: number): string {
+  // Implementation
+  return result;
+}
+```
+
+## Project Patterns
+
+### localStorage
+```tsx
+const [data, setData] = useLocalStorage<DataType>("key", defaultValue);
+```
+
+### Web3 Operations
+```tsx
+const handleTransaction = async () => {
+  setIsLoading(true);
+  try {
+    const tx = await contract.method();
+    toast.success("Transaction sent!");
+    await tx.wait();
+    toast.success("Transaction confirmed!");
+  } catch (error) {
+    console.error("Transaction failed:", error);
+    toast.error("Transaction failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
+
+### Animations
+```tsx
+// Use GSAP for complex animations
+// Tailwind for simple transitions
+className="transition-all duration-300 hover:scale-105"
+```
+
+## Formatting
+
+### Prettier Configuration:
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": false,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+### ESLint Rules:
+- Warnings for unused variables
+- Errors for undefined variables
+- Require types for all function parameters
+
+## Forbidden
+
+❌ Use `any` type  
+❌ Mutate props directly  
+❌ Use inline styles without necessity  
+❌ Duplicate code without creating utilities  
+❌ Ignore error handling  
+❌ Use var instead of const/let  
+❌ Create components without prop typing  
+
+## Recommended
+
+✅ Use strict typing  
+✅ Create reusable components  
+✅ Add detailed comments  
+✅ Handle all loading/error states  
+✅ Follow DRY principles  
+✅ Use semantic variable names  
+✅ Test edge cases
