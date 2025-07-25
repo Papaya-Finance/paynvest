@@ -301,7 +301,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                 </CardContent>
               </Card> */}
 
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Portfolio Summary</CardTitle>
                   <CardDescription>
@@ -335,7 +335,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </div>
         </div>

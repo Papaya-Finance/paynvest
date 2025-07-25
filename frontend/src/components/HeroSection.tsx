@@ -16,7 +16,7 @@ export function HeroSection({ onGetStarted }: HeroSectionProps) {
     <section className="flex-1">
       <div className="h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl bg-background shadow-sm flex flex-col transition-transform duration-700 px-4 py-12">
         <div className="max-w-5xl text-center mx-auto">
-          <div className="mb-8 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+          <div className="mb-8 inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
             <Zap className="mr-2 h-4 w-4" />
             Smart DCA Strategy for Ethereum
           </div>
