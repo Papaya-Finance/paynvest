@@ -3,12 +3,15 @@ pragma solidity 0.8.28;
 
 import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import { SafeERC20, IERC20 } from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 
 import { IPaynvest } from "./interfaces/IPaynvest.sol";
 import { IPapaya } from "./interfaces/IPapaya.sol";
 import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
 
 contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
+
+    using SafeERC20 for IERC20;
 
     uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with Papaya`s period
 
@@ -17,10 +20,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     uint256 averagePriceOfToken;
     address immutable owner;
 
+    IERC20 immutable WETH;
+
     mapping(address account => User user) public users;
 
-    constructor(address owner_) {
+    constructor(address owner_, IER20 weth_) {
         owner = owner_;
+        WETH = weth_;
     }
 
     //Данный метод отвечает за исполнение стратегии, т.е здесь нам надо сходить на чейнлинк и спросить цену
@@ -31,9 +37,14 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     }
 
-    //Данный метод отвечает за вывод доступных пользователю средств
     function withdraw(uint256 amount) external {
-        _sync(msg.sender(), 0);
+        _sync(msg.sender, 0);
+
+        if(users[msg.sender].balance < amount) revert WrongAmount();
+
+        users[msg.sender].balance -= amount;
+
+        WETH.safeTransferFrom(address(this), msg.sender, amount);
     }
 
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
@@ -48,10 +59,10 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
-        (uint96 incomeAmount, , , uint32 timestamp) = _decodeRates(encodedRates);
+        uint256 periodsPassed = (block.timestamp - users[account].streamStarted + afterDelay) % CLAIM_PERIOD;
+        uint256 afterDelay = ((periodsPassed + 1) * CLAIM_PERIOD + initialTimestamp ) - block.timestamp;
 
-
-
+        _sync(msg.sender, afterDelay);
     }
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {

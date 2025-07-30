@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 interface IPaynvest {
 
+    error WrongAmount();
+
     struct User {
         uint256 balance; //NOTE: Uses only in streamEnded and withdraw after it 
         uint96 rate;
