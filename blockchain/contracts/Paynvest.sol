@@ -10,10 +10,15 @@ import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
 
 contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
-    mapping(address user => uint256 amount) public balances;
+    uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with Papaya`s period
+
+    mapping(address account => User user) public users;
 
     uint256 totalIncomeBalance;
-    
+    uint32 initialTimestamp;
+
+    uint256 averagePriceOfToken;
+    uint32 iteration;
 
     address immutable owner;
     constructor(address owner_) {
@@ -25,10 +30,17 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     function claim() external {}
 
     //Данный метод отвечает за вывод доступных пользователю средств
-    function withdraw() external {}
+    function withdraw(uint256 amount) external {}
 
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
+        (uint96 incomeAmount, , , uint32 timestamp) = _decodeRates(encodedRates);
 
+        if(initialTimestamp == 0) {
+            initialTimestamp = timestamp;
+        }
+
+        users[from].rate = incomeAmount;
+        users[from].streamStarted = timestamp;
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
@@ -41,5 +53,17 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         } else {
             return 0xffffffff;
         }
+    }
+
+    function _decodeRates(uint256 encodedRates) internal pure returns (
+        uint96 incomeAmount, 
+        uint96 outgoingAmount, 
+        uint32 projectId, 
+        uint32 timestamp
+    ) {
+        incomeAmount = uint96(encodedRates);
+        outgoingAmount = uint96(encodedRates >> 96);
+        projectId = uint32(encodedRates >> 192);
+        timestamp = uint32(encodedRates >> 224);
     }
 }
