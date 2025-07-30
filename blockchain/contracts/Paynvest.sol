@@ -12,25 +12,29 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with Papaya`s period
 
+    uint32 initialTimestamp;
+    uint32 iteration;
+    uint256 averagePriceOfToken;
+    address immutable owner;
+
     mapping(address account => User user) public users;
 
-    uint256 totalIncomeBalance;
-    uint32 initialTimestamp;
-
-    uint256 averagePriceOfToken;
-    uint32 iteration;
-
-    address immutable owner;
     constructor(address owner_) {
         owner = owner_;
     }
 
     //Данный метод отвечает за исполнение стратегии, т.е здесь нам надо сходить на чейнлинк и спросить цену
     //Затем засунуть это дело в аргументы инча
-    function claim() external {}
+
+    //Идея такова что мы будем у чейнлинка спрашивать актуальную цену и постепенно строить среднюю цену за все время
+    function claim() external {
+
+    }
 
     //Данный метод отвечает за вывод доступных пользователю средств
-    function withdraw(uint256 amount) external {}
+    function withdraw(uint256 amount) external {
+        _sync(msg.sender(), 0);
+    }
 
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
         (uint96 incomeAmount, , , uint32 timestamp) = _decodeRates(encodedRates);
@@ -44,6 +48,9 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
+        (uint96 incomeAmount, , , uint32 timestamp) = _decodeRates(encodedRates);
+
+
 
     }
 
@@ -65,5 +72,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         outgoingAmount = uint96(encodedRates >> 96);
         projectId = uint32(encodedRates >> 192);
         timestamp = uint32(encodedRates >> 224);
+    }
+    //NOTE: Не забудь про нюансы с кол-вом нулей, та же самая проблема что и раньше
+    function _sync(address account, uint256 afterDelay) internal pure {
+
+        uint256 periodsPassed = (block.timestamp - users[account].streamStarted + afterDelay) % CLAIM_PERIOD;
+        uint256 amountStreamed = users[account].rate * periodsPassed;
+
+        users[account].balance = amountStreamed * averagePriceOfToken; 
     }
 }
