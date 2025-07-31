@@ -56,6 +56,11 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         WETH.safeTransferFrom(address(this), msg.sender, amount);
     }
 
+    function balanceOf(address account) external view returns (uint256 balance) {
+        uint256 periodsPassed = _periodsPassed(users[account].streamStarted, 0);
+        balance = users[account].rate * periodsPassed * averagePriceOfToken;
+    }
+
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
         (uint96 incomeAmount, , , uint32 timestamp) = _decodeRates(encodedRates);
 
@@ -68,10 +73,10 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
-        uint256 periodsPassed = _periodsPassed(users[msg.sender].streamStarted, 0);
+        uint256 periodsPassed = _periodsPassed(users[from].streamStarted, 0);
         uint256 afterDelay = ((periodsPassed + 1) * CLAIM_PERIOD + initialTimestamp ) - block.timestamp;
 
-        _sync(msg.sender, afterDelay);
+        _sync(from, afterDelay);
     }
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {

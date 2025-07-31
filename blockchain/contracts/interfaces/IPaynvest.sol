@@ -13,4 +13,6 @@ interface IPaynvest {
 
     function claim() external;
     function withdraw(uint256 amount) external;
+
+    function balanceOf(address account) external view returns (uint256 balance);
 }
