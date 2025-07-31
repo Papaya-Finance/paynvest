@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { X, Loader2 } from "lucide-react";
 import { usePeriodPapaya } from "@/hooks/usePeriodPapaya";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
-import { toast } from "sonner";
+import { createPortal } from "react-dom";
 
 interface PapayaDialogProps {
   isOpen: boolean;
@@ -16,7 +16,8 @@ interface PapayaDialogProps {
 }
 
 /**
- * Dialog component for Papaya deposit and withdraw operations
+ * Dialog component for Papaya deposit/withdraw operations
+ * Includes approval flow for deposits
  */
 export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   const [amount, setAmount] = useState("");
@@ -27,79 +28,80 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   const { deposit, withdraw, checkApproval, approveUSDC } = usePeriodPapaya();
   const { usdc, papaya } = useWalletBalance();
 
-  // Reset state when dialog opens/closes
+  // Check approval status when dialog opens for deposit mode
   useEffect(() => {
-    if (isOpen) {
-      setAmount("");
-      setIsLoading(false);
-      setNeedsApproval(false);
-      setIsCheckingApproval(false);
-    }
-  }, [isOpen]);
-
-  // Check approval when amount changes for deposit mode
-  useEffect(() => {
-    if (isOpen && mode === "deposit" && amount && parseFloat(amount) > 0) {
+    if (isOpen && mode === "deposit") {
       checkApprovalStatus();
     }
-  }, [amount, isOpen, mode]);
+  }, [isOpen, mode]);
+
+  // Handle Escape key to close dialog
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
   const checkApprovalStatus = async () => {
     if (!amount || parseFloat(amount) <= 0) return;
 
     setIsCheckingApproval(true);
     try {
-      const amountBigInt = BigInt(Math.floor(parseFloat(amount) * 10 ** 6));
-      const isApproved = await checkApproval(amountBigInt);
+      const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e6)); // USDC has 6 decimals
+      const isApproved = await checkApproval(amountInWei);
       setNeedsApproval(!isApproved);
     } catch (error) {
-      console.error("Failed to check approval:", error);
-      setNeedsApproval(true);
+      console.error("Failed to check approval status:", error);
+      setNeedsApproval(true); // Default to requiring approval on error
     } finally {
       setIsCheckingApproval(false);
     }
   };
 
   const handleApprove = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
+    if (!amount || parseFloat(amount) <= 0) return;
 
     setIsLoading(true);
     try {
       await approveUSDC();
       setNeedsApproval(false);
-      toast.success("Approval successful!");
     } catch (error) {
       console.error("Approval failed:", error);
-      toast.error("Approval failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    const amountBigInt = BigInt(Math.floor(parseFloat(amount) * 10 ** 6)); // USDC has 6 decimals
+    if (!amount || parseFloat(amount) <= 0) return;
 
     setIsLoading(true);
     try {
       if (mode === "deposit") {
-        await deposit(amountBigInt, false);
-        toast.success("Deposit successful!");
+        const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e6)); // USDC has 6 decimals
+        await deposit(amountInWei);
       } else {
-        await withdraw(amountBigInt);
-        toast.success("Withdraw successful!");
+        const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e18)); // Papaya has 18 decimals
+        await withdraw(amountInWei);
       }
+      
+      setAmount("");
       onClose();
     } catch (error) {
       console.error(`${mode} failed:`, error);
-      toast.error(`${mode === "deposit" ? "Deposit" : "Withdraw"} failed. Please try again.`);
     } finally {
       setIsLoading(false);
     }
@@ -162,16 +164,23 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+  // Use portal to render modal at the root level
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <Card 
+        className="w-full max-w-sm p-4 relative z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pr-0 pl-0">
           <CardTitle className="text-lg font-semibold">{getTitle()}</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2 pr-0 pl-0">
           <div className="space-y-2">
             <label className="text-sm font-medium">Amount</label>
             <Input
@@ -189,11 +198,11 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
             <span className="font-medium">{getBalance()}</span>
           </div>
 
-          {mode === "deposit" && needsApproval && (
+          {/* {mode === "deposit" && needsApproval && (
             <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
               <p>You need to approve USDC tokens before depositing.</p>
             </div>
-          )}
+          )} */}
 
           <div className="flex space-x-2 pt-4">
             <Button
@@ -214,6 +223,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </div>,
+    document.body
   );
 } 
