@@ -105,6 +105,36 @@ export function AppSection({ onBack }: AppSectionProps) {
 
   const metricsIsLoading = totalInvestedLoading || ethBalanceLoading || ethPriceLoading;
 
+  // Validation functions for Investment Amount
+  const getAmountInWei = () => {
+    if (!amount || parseFloat(amount) <= 0) return BigInt(0);
+    return BigInt(Math.floor(parseFloat(amount) * 1e18)); // Papaya has 18 decimals
+  };
+
+  const getAvailablePapayaBalance = () => {
+    return papaya?.value || BigInt(0);
+  };
+
+  const isAmountValid = () => {
+    const amountInWei = getAmountInWei();
+    const availableBalance = getAvailablePapayaBalance();
+    return amountInWei > 0 && amountInWei <= availableBalance;
+  };
+
+  const isCreateStrategyDisabled = () => {
+    if (!isConnected) return false; // Show "Connect Wallet" instead
+    if (!amount || parseFloat(amount) <= 0) return true;
+    if (!isAmountValid()) return true;
+    return false;
+  };
+
+  const handleAmountChange = (value: string) => {
+    // Allow only numbers and decimal point
+    if (/^\d*\.?\d*$/.test(value) || value === "") {
+      setAmount(value);
+    }
+  };
+
   return (
     <section className="flex-1">
       <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-background shadow-sm flex flex-col transition-transform duration-700 px-4 py-8">
@@ -150,11 +180,11 @@ export function AppSection({ onBack }: AppSectionProps) {
                     <>
                       <InvestmentInput
                         value={amount}
-                        onChange={setAmount}
+                        onChange={handleAmountChange}
                         placeholder="0"
                         fontSize={36}
                         fontWeight={600}
-                        className='!bg-background'
+                        className={`!bg-background ${!isAmountValid() && amount ? 'border-red-500' : ''}`}
                         classNameContainer='bg-background'
                       />
                       <div className="flex items-center mb-2">
@@ -162,6 +192,11 @@ export function AppSection({ onBack }: AppSectionProps) {
                           Papaya Balance: {papaya?.formatted || 0} USDC
                         </span>
                       </div>
+                      {!isAmountValid() && amount && (
+                        <p className="text-xs text-red-500 mb-2">
+                          Amount exceeds Papaya balance
+                        </p>
+                      )}
                       {!isConnected ? (
                         <Button
                         onClick={() => {open()}}
@@ -178,7 +213,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                               handleCreateStrategy(num, 'USDT', 'weekly');
                             }
                           }}
-                          disabled={!amount || isNaN(parseFloat(amount))}
+                          disabled={isCreateStrategyDisabled()}
                         >
                           Create Strategy
                         </Button>

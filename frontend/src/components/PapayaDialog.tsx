@@ -35,6 +35,13 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
     }
   }, [isOpen, mode]);
 
+  // Check approval status when amount changes for deposit mode
+  useEffect(() => {
+    if (isOpen && mode === "deposit" && amount && parseFloat(amount) > 0) {
+      checkApprovalStatus();
+    }
+  }, [amount, isOpen, mode]);
+
   // Handle Escape key to close dialog
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -54,6 +61,13 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  // Reset amount when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setAmount("");
+    }
+  }, [isOpen]);
 
   const checkApprovalStatus = async () => {
     if (!amount || parseFloat(amount) <= 0) return;
@@ -148,9 +162,31 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
     return mode === "deposit" ? "Deposit" : "Withdraw";
   };
 
+  // Validation functions
+  const getAmountInWei = () => {
+    if (!amount || parseFloat(amount) <= 0) return BigInt(0);
+    const multiplier = mode === "deposit" ? 1e6 : 1e18; // USDC: 6 decimals, Papaya: 18 decimals
+    return BigInt(Math.floor(parseFloat(amount) * multiplier));
+  };
+
+  const getAvailableBalance = () => {
+    if (mode === "deposit") {
+      return usdc?.value || BigInt(0);
+    } else {
+      return papaya?.value || BigInt(0);
+    }
+  };
+
+  const isAmountValid = () => {
+    const amountInWei = getAmountInWei();
+    const availableBalance = getAvailableBalance();
+    return amountInWei > 0 && amountInWei <= availableBalance;
+  };
+
   const isButtonDisabled = () => {
     if (isLoading || !amount || parseFloat(amount) <= 0) return true;
     if (mode === "deposit" && isCheckingApproval) return true;
+    if (!isAmountValid()) return true;
     return false;
   };
 
@@ -159,6 +195,14 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
       handleApprove();
     } else {
       handleSubmit();
+    }
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only numbers and decimal point
+    if (/^\d*\.?\d*$/.test(value) || value === "") {
+      setAmount(value);
     }
   };
 
@@ -184,13 +228,21 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
           <div className="space-y-2">
             <label className="text-sm font-medium">Amount</label>
             <Input
-              type="number"
+              type="text"
               placeholder="0.00"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleAmountChange}
               disabled={isLoading}
-              className="text-lg"
+              className={`text-lg ${!isAmountValid() && amount ? 'border-red-500' : ''}`}
             />
+            {!isAmountValid() && amount && (
+              <p className="text-xs text-red-500">
+                {mode === "deposit" 
+                  ? "Amount exceeds USDC balance" 
+                  : "Amount exceeds Papaya balance"
+                }
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between text-sm text-muted-foreground">

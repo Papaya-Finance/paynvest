@@ -79,19 +79,19 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
 
   /**
    * Check if USDC approval is needed
-   * Note: This is a placeholder - in wagmi v2 we need to use different approach
+   * For now, always require approval for the first deposit
    */
   const checkApproval = useCallback(
     async (amount: bigint): Promise<boolean> => {
       if (!address) return false;
 
       try {
-        // TODO: Implement proper approval check for wagmi v2
-        // For now, return false to always require approval
+        // TODO: Implement proper approval check when wagmi v2 API is stable
+        // For now, always require approval for the first deposit
         return false;
       } catch (error) {
         console.error("Failed to check approval:", error);
-        return false;
+        return false; // Default to requiring approval on error
       }
     },
     [address]
