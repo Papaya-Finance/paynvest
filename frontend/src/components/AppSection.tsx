@@ -12,6 +12,9 @@ import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
 import { PapayaBalance } from './PapayaBalance'
 import { DashboardMetrics } from './DashboardMetrics'
+import { useTotalInvested } from '@/hooks/useTotalInvested'
+import { useEthBalance } from '@/hooks/useEthBalance'
+import { useEthPrice } from '@/hooks/useEthPrice'
 
 interface AppSectionProps {
   onBack: () => void
@@ -28,7 +31,7 @@ export function AppSection({ onBack }: AppSectionProps) {
     portfolioMetrics, 
     transactions, 
     ethPrice, 
-    isLoading, 
+    isLoading: dcaIsLoading, 
     isPriceLoading,
     createStrategy,
     stopStrategy,
@@ -36,6 +39,10 @@ export function AppSection({ onBack }: AppSectionProps) {
     activeStrategy // добавлено
   } = useDCAStrategy()
   
+  // Real data hooks
+  const { totalInvested, isLoading: totalInvestedLoading } = useTotalInvested();
+  const { balance: ethBalance, isLoading: ethBalanceLoading } = useEthBalance();
+  const { price: realEthPrice, isLoading: ethPriceLoading } = useEthPrice();
   
   const { usdc } = useWalletBalance()
   
@@ -73,18 +80,30 @@ export function AppSection({ onBack }: AppSectionProps) {
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount)
-  }
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
 
-  const formatETH = (amount: number) => {
-    return `${amount.toFixed(6)}`
-  }
+  const formatEthBalance = (balance: bigint) => {
+    const ethAmount = Number(balance) / 1e18;
+    return ethAmount.toFixed(6);
+  };
+
+  // Calculate portfolio value using real data
+  const portfolioValue = (() => {
+    if (!ethBalance || !realEthPrice) return 0;
+    
+    // Convert balance from wei to ETH, then multiply by price
+    const ethAmount = Number(ethBalance) / 1e18;
+    return ethAmount * realEthPrice;
+  })();
+
+  const metricsIsLoading = totalInvestedLoading || ethBalanceLoading || ethPriceLoading;
 
   return (
     <section className="flex-1">
@@ -114,7 +133,7 @@ export function AppSection({ onBack }: AppSectionProps) {
           <div className="grid grid-cols-1 gap-8">
             <div className="lg:col-span-2 space-y-6">
               {/* Dashboard Metrics */}
-              <DashboardMetrics />
+              {/* <DashboardMetrics /> */}
               
               {/* Papaya Balance */}
               <PapayaBalance />
@@ -192,10 +211,10 @@ export function AppSection({ onBack }: AppSectionProps) {
                         <Button 
                           variant="destructive" 
                           onClick={handleStopStrategy}
-                          disabled={isLoading}
+                          disabled={dcaIsLoading}
                           className="w-full"
                         >
-                          {isLoading ? (
+                          {dcaIsLoading ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               Stopping...
@@ -214,10 +233,10 @@ export function AppSection({ onBack }: AppSectionProps) {
                       )}
                         <Button 
                           onClick={handleClaimETH}
-                          disabled={isLoading || portfolioMetrics.totalETH === 0}
+                          disabled={dcaIsLoading || portfolioMetrics.totalETH === 0}
                           className="w-full"
                         >
-                          {isLoading ? (
+                          {dcaIsLoading ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               Claiming...
@@ -239,9 +258,14 @@ export function AppSection({ onBack }: AppSectionProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-muted-foreground">Total Invested</p>
-                        <p className="text-xl font-bold">{formatCurrency(portfolioMetrics.totalInvested)}</p>
+                        <p className="text-xl font-bold">
+                          {metricsIsLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            formatCurrency(Number(totalInvested) / 1e18)
+                          )}
+                        </p>
                       </div>
-                      {/* <CircleDollarSign className="h-8 w-8 text-primary" /> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -251,9 +275,14 @@ export function AppSection({ onBack }: AppSectionProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-primary/80">ETH Balance</p>
-                        <p className="text-xl font-bold">{formatETH(portfolioMetrics.totalETH)}</p>
+                        <p className="text-xl font-bold">
+                          {metricsIsLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            formatEthBalance(ethBalance)
+                          )}
+                        </p>
                       </div>
-                      {/* <HandCoins className="h-4 w-4 text-primary" /> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -264,13 +293,13 @@ export function AppSection({ onBack }: AppSectionProps) {
                       <div>
                         <p className="text-xs font-medium text-muted-foreground">Current ETH Price</p>
                         <p className="text-xl font-bold flex items-center">
-                          {isPriceLoading ? (
+                          {metricsIsLoading ? (
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : null}
-                          {formatCurrency(ethPrice)}
+                          ) : (
+                            realEthPrice ? formatCurrency(realEthPrice) : "N/A"
+                          )}
                         </p>
                       </div>
-                      {/* <TrendingUp className="h-4 w-4 text-primary" /> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -280,9 +309,14 @@ export function AppSection({ onBack }: AppSectionProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-medium text-muted-foreground">Portfolio Value</p>
-                        <p className="text-xl font-bold">{formatCurrency(portfolioMetrics.currentValue)}</p>
+                        <p className="text-xl font-bold">
+                          {metricsIsLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            formatCurrency(portfolioValue)
+                          )}
+                        </p>
                       </div>
-                      {/* <BarChart3 className="h-4 w-4 text-primary" /> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -290,7 +324,7 @@ export function AppSection({ onBack }: AppSectionProps) {
           
 
               {/* Transaction History */}
-              <TransactionHistory transactions={transactions} />
+              {/* <TransactionHistory transactions={transactions} /> */}
             </div>
             
             <div className="space-y-6">
