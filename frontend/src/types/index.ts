@@ -40,3 +40,24 @@ export interface AppSection {
   id: 'hero' | 'app'
   title: string
 }
+
+// PeriodPapaya types
+export interface SubscriptionData {
+  isActive: boolean;
+  encodedRates: bigint;
+}
+
+export interface TotalInvestedCalculation {
+  totalInvested: bigint;
+  periodsPassed: number;
+  incomeRate: bigint;
+  streamStarted: number;
+}
+
+export interface UsePeriodPapayaReturn {
+  deposit: (amount: bigint, isPermit2?: boolean) => Promise<any>;
+  withdraw: (amount: bigint) => Promise<any>;
+  getSubscriptionData: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`) => Promise<SubscriptionData>;
+  calculateTotalInvested: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`, refillDays: number) => Promise<TotalInvestedCalculation>;
+  isLoading: boolean;
+}

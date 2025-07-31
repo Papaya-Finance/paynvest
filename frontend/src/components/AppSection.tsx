@@ -35,7 +35,7 @@ export function AppSection({ onBack }: AppSectionProps) {
   } = useDCAStrategy()
   
   
-  const { usdt } = useWalletBalance()
+  const { usdc } = useWalletBalance()
   
   const [amount, setAmount] = useState('');
 
@@ -132,7 +132,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                       />
                       <div className="flex items-center mb-2">
                         <span className="text-xs text-muted-foreground">
-                          Balance: {usdt?.formatted} USDT
+                          Balance: {usdc?.formatted} USDC
                         </span>
                       </div>
                       {!isConnected ? (
