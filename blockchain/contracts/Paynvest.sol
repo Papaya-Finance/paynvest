@@ -13,7 +13,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     using SafeERC20 for IERC20;
 
-    uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with Papaya`s period
+    uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with crt Papaya`s period
 
     uint32 initialTimestamp;
     uint32 iteration;
@@ -21,11 +21,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     address immutable owner;
 
     IERC20 immutable WETH;
+    IERC20 immutable USDC;
 
     mapping(address account => User user) public users;
 
-    constructor(address owner_, IER20 weth_) {
+    constructor(address owner_, IERC20 usdc_, IERC20 weth_) {
         owner = owner_;
+        USDC = usdc_;
         WETH = weth_;
     }
 
@@ -34,7 +36,14 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     //Идея такова что мы будем у чейнлинка спрашивать актуальную цену и постепенно строить среднюю цену за все время
     function claim() external {
+        //По порядку, нам нужно первым делом обратиться в папайю и узнать сколько средств у нас на руках
+        //Затем узнаем цену на эфир
+        //обновляем среднюю цену
+        //Вытаскиваем деньги с папайи сюда
+        //Даем разрешение на съем средств инч
+        //отправляем запрос на инч, вот с этим точно будут нюансы, но мы справимся
 
+        //TODO: Надо сделать усеченный интерфейс папайи, по сути то мне нужно withdraw, balanceOf, TOKEN_SCALED
     }
 
     function withdraw(uint256 amount) external {
@@ -59,7 +68,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
-        uint256 periodsPassed = (block.timestamp - users[account].streamStarted + afterDelay) % CLAIM_PERIOD;
+        uint256 periodsPassed = _periodsPassed(users[msg.sender].streamStarted, 0);
         uint256 afterDelay = ((periodsPassed + 1) * CLAIM_PERIOD + initialTimestamp ) - block.timestamp;
 
         _sync(msg.sender, afterDelay);
@@ -85,11 +94,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         timestamp = uint32(encodedRates >> 224);
     }
     //NOTE: Не забудь про нюансы с кол-вом нулей, та же самая проблема что и раньше
-    function _sync(address account, uint256 afterDelay) internal pure {
-
-        uint256 periodsPassed = (block.timestamp - users[account].streamStarted + afterDelay) % CLAIM_PERIOD;
-        uint256 amountStreamed = users[account].rate * periodsPassed;
+    function _sync(address account, uint256 afterDelay) internal {
+        uint256 amountStreamed = users[account].rate * _periodsPassed(users[account].streamStarted, afterDelay);
 
         users[account].balance = amountStreamed * averagePriceOfToken; 
+    }
+
+    function _periodsPassed(uint256 streamStarted, uint256 afterDelay) internal view returns(uint256 periodsPassed) {
+        periodsPassed = (block.timestamp - streamStarted + afterDelay) % CLAIM_PERIOD;
     }
 }
