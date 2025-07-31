@@ -11,6 +11,7 @@ import { useDCAStrategy } from '@/hooks/useDCAStrategy'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
 import { PapayaBalance } from './PapayaBalance'
+import { DashboardMetrics } from './DashboardMetrics'
 
 interface AppSectionProps {
   onBack: () => void
@@ -112,6 +113,9 @@ export function AppSection({ onBack }: AppSectionProps) {
 
           <div className="grid grid-cols-1 gap-8">
             <div className="lg:col-span-2 space-y-6">
+              {/* Dashboard Metrics */}
+              <DashboardMetrics />
+              
               {/* Papaya Balance */}
               <PapayaBalance />
               

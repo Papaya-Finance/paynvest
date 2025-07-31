@@ -71,3 +71,35 @@ export interface UsePeriodPapayaReturn {
   approveUSDC: (amount?: bigint) => Promise<any>;
   isLoading: boolean;
 }
+
+// Paynvest types
+export interface UsePaynvestReturn {
+  getBalance: (userAddress: `0x${string}`) => Promise<bigint>;
+  withdraw: (amount: bigint) => Promise<any>;
+  claim: () => Promise<any>;
+  isLoading: boolean;
+}
+
+// ETH Price types
+export interface UseEthPriceReturn {
+  price: number | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+// Total Invested types
+export interface UseTotalInvestedReturn {
+  totalInvested: bigint;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+// ETH Balance types
+export interface UseEthBalanceReturn {
+  balance: bigint;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
