@@ -213,6 +213,25 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
   );
 
   /**
+   * Decode encodedRates using the same logic as _decodeRates in the contract
+   * @param encodedRates - Encoded rates from subscription data
+   * @returns Decoded values: incomeAmount, outgoingAmount, projectId, timestamp
+   */
+  const decodeRates = useCallback((encodedRates: bigint) => {
+    const incomeAmount = encodedRates & 0xFFFFFFFFFFFFFFFFFFFFFFFFn; // uint96
+    const outgoingAmount = (encodedRates >> 96n) & 0xFFFFFFFFFFFFFFFFFFFFFFFFn; // uint96
+    const projectId = (encodedRates >> 192n) & 0xFFFFFFFFn; // uint32
+    const timestamp = (encodedRates >> 224n) & 0xFFFFFFFFn; // uint32
+    
+    return {
+      incomeAmount,
+      outgoingAmount,
+      projectId,
+      timestamp,
+    };
+  }, []);
+
+  /**
    * Get subscription data for calculating total invested
    * @param userAddress - User's wallet address
    * @param paynvestAddress - Paynvest contract address
@@ -265,11 +284,11 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           };
         }
 
-        // Decode encodedRates to get streamStarted and incomeRate
-        // This is a simplified example - you'll need to implement the actual decoding logic
-        // based on how the contract encodes these values
-        const streamStarted = Number(encodedRates & 0xFFFFFFFFn); // First 32 bits
-        const incomeRate = (encodedRates >> 32n) & 0xFFFFFFFFn; // Next 32 bits
+        // Decode encodedRates using the proper method
+        const { incomeAmount, outgoingAmount, projectId, timestamp } = decodeRates(encodedRates);
+        
+        const streamStarted = Number(timestamp);
+        const incomeRate = incomeAmount;
 
         const now = Math.floor(Date.now() / 1000);
         const periodsPassed = Math.floor((now - streamStarted) / (refillDays * 24 * 60 * 60));
@@ -286,7 +305,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         throw error;
       }
     },
-    [getSubscriptionData]
+    [getSubscriptionData, decodeRates]
   );
 
   return {
@@ -294,6 +313,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     withdraw,
     getSubscriptionData,
     calculateTotalInvested,
+    decodeRates,
     checkApproval,
     approveUSDC,
     isLoading,
