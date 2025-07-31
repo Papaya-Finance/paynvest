@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 const TOKENS = {
   USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  PAPAYA: process.env.NEXT_PUBLIC_PERIOD_PAPAYA_CONTRACT_ADDRESS as `0x${string}`,
 } as const
 
 export interface WalletBalance {
@@ -28,13 +29,19 @@ export interface WalletBalance {
     symbol: string
     decimals: number
   } | null
+  papaya: {
+    value: bigint
+    formatted: string
+    symbol: string
+    decimals: number
+  } | null
   isLoading: boolean
   isConnected: boolean
   address: string | undefined
 }
 
 /**
- * Hook to get wallet balances for ETH, USDT, and USDC
+ * Hook to get wallet balances for ETH, USDT, USDC, and Papaya
  * Can be used anywhere in the application
  * 
  * @returns WalletBalance object with all token balances
@@ -59,16 +66,23 @@ export function useWalletBalance(): WalletBalance {
     token: TOKENS.USDC as `0x${string}`,
   })
 
-  const isLoading = isEthLoading || isUsdtLoading || isUsdcLoading
+  // Papaya balance
+  const { data: papayaBalance, isLoading: isPapayaLoading } = useBalance({
+    address,
+    token: TOKENS.PAPAYA as `0x${string}`,
+  })
+
+  const isLoading = isEthLoading || isUsdtLoading || isUsdcLoading || isPapayaLoading
 
   const balance = useMemo(() => ({
     eth: ethBalance || null,
     usdt: usdtBalance || null,
     usdc: usdcBalance || null,
+    papaya: papayaBalance || null,
     isLoading,
     isConnected,
     address,
-  }), [ethBalance, usdtBalance, usdcBalance, isLoading, isConnected, address])
+  }), [ethBalance, usdtBalance, usdcBalance, papayaBalance, isLoading, isConnected, address])
 
   return balance
 }
@@ -76,10 +90,10 @@ export function useWalletBalance(): WalletBalance {
 /**
  * Hook to get specific token balance
  * 
- * @param token - 'eth' | 'usdt' | 'usdc'
+ * @param token - 'eth' | 'usdt' | 'usdc' | 'papaya'
  * @returns Balance data for specific token
  */
-export function useTokenBalance(token: 'eth' | 'usdt' | 'usdc') {
+export function useTokenBalance(token: 'eth' | 'usdt' | 'usdc' | 'papaya') {
   const { address, isConnected } = useAccount()
 
   const { data: balance, isLoading } = useBalance({
@@ -98,11 +112,11 @@ export function useTokenBalance(token: 'eth' | 'usdt' | 'usdc') {
 /**
  * Hook to get formatted balance string
  * 
- * @param token - 'eth' | 'usdt' | 'usdc'
+ * @param token - 'eth' | 'usdt' | 'usdc' | 'papaya'
  * @param decimals - Number of decimal places to show
  * @returns Formatted balance string
  */
-export function useFormattedBalance(token: 'eth' | 'usdt' | 'usdc', decimals: number = 4) {
+export function useFormattedBalance(token: 'eth' | 'usdt' | 'usdc' | 'papaya', decimals: number = 4) {
   const { balance, isLoading, isConnected } = useTokenBalance(token)
 
   const formattedBalance = useMemo(() => {

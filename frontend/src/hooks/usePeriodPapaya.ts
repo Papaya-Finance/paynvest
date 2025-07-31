@@ -20,8 +20,122 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
   // Contract configuration
   const contractConfig = {
     address: process.env.NEXT_PUBLIC_PERIOD_PAPAYA_CONTRACT_ADDRESS as `0x${string}`,
-    abi: PeriodPapayaABI,
+    abi: PeriodPapayaABI.abi,
   };
+
+  // USDC contract configuration for approval
+  const usdcContractConfig = {
+    address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" as `0x${string}`,
+    abi: [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approve",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          }
+        ],
+        "name": "allowance",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+  };
+
+  /**
+   * Check if USDC approval is needed
+   */
+  const checkApproval = useCallback(
+    async (amount: bigint): Promise<boolean> => {
+      if (!address) return false;
+
+      try {
+        const allowance = await readContract({
+          ...usdcContractConfig,
+          functionName: "allowance",
+          args: [address, contractConfig.address],
+        } as any);
+
+        return allowance >= amount;
+      } catch (error) {
+        console.error("Failed to check approval:", error);
+        return false;
+      }
+    },
+    [address, readContract]
+  );
+
+  /**
+   * Approve USDC tokens for PeriodPapaya contract
+   */
+  const approveUSDC = useCallback(
+    async (amount: bigint = 2n ** 256n - 1n) => {
+      if (!address) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const tx = await writeContractAsync({
+          ...usdcContractConfig,
+          functionName: "approve",
+          args: [contractConfig.address, amount],
+        });
+
+        toast.success("Approval transaction sent!");
+        
+        // Wait for transaction confirmation
+        await tx.wait();
+        toast.success("Approval confirmed!");
+        
+        return tx;
+      } catch (error) {
+        console.error("Approval failed:", error);
+        toast.error("Approval failed. Please try again.");
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [address, writeContractAsync]
+  );
 
   /**
    * Deposit funds into PeriodPapaya contract
@@ -110,7 +224,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           ...contractConfig,
           functionName: "subscriptions",
           args: [userAddress, paynvestAddress],
-        });
+        } as any);
 
         return {
           isActive: result[0] as boolean,
@@ -121,7 +235,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         throw error;
       }
     },
-    []
+    [readContract]
   );
 
   /**
@@ -180,6 +294,8 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     withdraw,
     getSubscriptionData,
     calculateTotalInvested,
+    checkApproval,
+    approveUSDC,
     isLoading,
   };
 } 

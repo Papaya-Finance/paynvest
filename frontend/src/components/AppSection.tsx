@@ -10,6 +10,7 @@ import { TransactionHistory } from './TransactionHistory'
 import { useDCAStrategy } from '@/hooks/useDCAStrategy'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
+import { PapayaBalance } from './PapayaBalance'
 
 interface AppSectionProps {
   onBack: () => void
@@ -111,6 +112,9 @@ export function AppSection({ onBack }: AppSectionProps) {
 
           <div className="grid grid-cols-1 gap-8">
             <div className="lg:col-span-2 space-y-6">
+              {/* Papaya Balance */}
+              <PapayaBalance />
+              
               {/* Investment Input */}
               <Card className="border border-muted shadow-lg gap-2">
                 <CardHeader>
