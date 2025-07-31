@@ -6,8 +6,11 @@ import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/Sig
 import { SafeERC20, IERC20 } from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 
 import { IPaynvest } from "./interfaces/IPaynvest.sol";
-import { IPapaya } from "./interfaces/IPapaya.sol";
+import { IPapayaSimplified } from "./interfaces/IPapayaSimplified.sol";
 import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
+
+import "@1inch/limit-order-protocol-contract/interfaces/IOrderMixin.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
@@ -17,33 +20,64 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     uint32 initialTimestamp;
     uint32 iteration;
-    uint256 averagePriceOfToken;
-    address immutable owner;
+    uint256 averagePartOfToken;
 
-    IERC20 immutable WETH;
-    IERC20 immutable USDC;
+    address public immutable owner;
+    IERC20 public immutable WETH;
+    IERC20 public immutable USDC;
+    IPapayaSimplified public immutable PAPAYA;
+    IOrderMixin public immutable LIMIT_ORDER;
+    AggregatorV3Interface public immutable TOKEN_PRICE_FEED;
+    uint256 public immutable TOKEN_SCALED;
 
     mapping(address account => User user) public users;
 
-    constructor(address owner_, IERC20 usdc_, IERC20 weth_) {
+    constructor(
+        address owner_, 
+        IERC20 usdc_, 
+        IERC20 weth_, 
+        IPapayaSimplified papaya_,
+        IOrderMixin limit_order_,
+        address token_price_feed_, 
+        uint256 token_scaled_
+    ) {
         owner = owner_;
         USDC = usdc_;
         WETH = weth_;
+        PAPAYA = papaya_;
+        LIMIT_ORDER = limit_order_;
+        TOKEN_PRICE_FEED = AggregatorV3Interface(token_price_feed_);
+        TOKEN_SCALED = token_scaled_;
     }
 
-    //Данный метод отвечает за исполнение стратегии, т.е здесь нам надо сходить на чейнлинк и спросить цену
-    //Затем засунуть это дело в аргументы инча
+    function claim(
+        IOrderMixin.Order calldata order,
+        bytes calldata signature,
+        uint256 amount,
+        IOrderMixin.TakerTraits takerTraits
+    ) external {
+        uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
 
-    //Идея такова что мы будем у чейнлинка спрашивать актуальную цену и постепенно строить среднюю цену за все время
-    function claim() external {
-        //По порядку, нам нужно первым делом обратиться в папайю и узнать сколько средств у нас на руках
-        //Затем узнаем цену на эфир
-        //обновляем среднюю цену
-        //Вытаскиваем деньги с папайи сюда
-        //Даем разрешение на съем средств инч
-        //отправляем запрос на инч, вот с этим точно будут нюансы, но мы справимся
+        //Здесь мы узнаем сколько можно купить эфира за 1 usdc
+        (, int256 tokenPrice, , , ) = TOKEN_PRICE_FEED.latestRoundData(); //1e18
 
-        //TODO: Надо сделать усеченный интерфейс папайи, по сути то мне нужно withdraw, balanceOf, TOKEN_SCALED
+        averagePartOfToken *= iteration++;
+        averagePartOfToken = (averagePartOfToken + uint256(tokenPrice)) / iteration; //1e18
+
+        PAPAYA.withdraw(currentBalance);
+
+        USDC.forceApprove(address(LIMIT_ORDER), currentBalance /= TOKEN_SCALED);
+
+        uint256 amountOfToken = currentBalance * averagePartOfToken;
+
+        (uint256 makingAmount, uint256 takingAmount, bytes32 orderHash) = LIMIT_ORDER.fillContractOrder(
+            order,
+            signature,
+            amount,
+            takerTraits
+        )
+
+        emit Claimed(makingAmount, takingAmount, orderHash);
     }
 
     function withdraw(uint256 amount) external {
