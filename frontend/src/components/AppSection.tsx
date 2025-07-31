@@ -44,7 +44,7 @@ export function AppSection({ onBack }: AppSectionProps) {
   const { balance: ethBalance, isLoading: ethBalanceLoading } = useEthBalance();
   const { price: realEthPrice, isLoading: ethPriceLoading } = useEthPrice();
   
-  const { usdc } = useWalletBalance()
+  const { papaya } = useWalletBalance()
   
   const [amount, setAmount] = useState('');
 
@@ -151,7 +151,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                       <InvestmentInput
                         value={amount}
                         onChange={setAmount}
-                        placeholder="$0"
+                        placeholder="0"
                         fontSize={36}
                         fontWeight={600}
                         className='!bg-background'
@@ -159,7 +159,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                       />
                       <div className="flex items-center mb-2">
                         <span className="text-xs text-muted-foreground">
-                          Balance: {usdc?.formatted} USDC
+                          Papaya Balance: {papaya?.formatted || 0} USDC
                         </span>
                       </div>
                       {!isConnected ? (

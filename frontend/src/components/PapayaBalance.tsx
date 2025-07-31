@@ -47,7 +47,7 @@ export function PapayaBalance() {
                   className="rounded-lg"
                 />
               </div>
-              <span className="text-lg font-bold">
+              <span className="text-md font-mono">
                 {/* {isLoading ? "Loading..." : formattedBalance} */}
                 {formattedBalance}
               </span>
