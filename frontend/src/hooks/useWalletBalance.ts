@@ -122,7 +122,7 @@ export function useFormattedBalance(token: 'eth' | 'usdt' | 'usdc' | 'papaya', d
   const formattedBalance = useMemo(() => {
     if (!balance || !isConnected) return '0'
     
-    const value = parseFloat(balance.formatted)
+    const value = Number(balance.value) / Math.pow(10, balance.decimals)
     return value.toFixed(decimals)
   }, [balance, isConnected, decimals])
 
@@ -130,6 +130,5 @@ export function useFormattedBalance(token: 'eth' | 'usdt' | 'usdc' | 'papaya', d
     formattedBalance,
     isLoading,
     isConnected,
-    symbol: balance?.symbol || token.toUpperCase(),
   }
 } 
