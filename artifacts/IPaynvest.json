@@ -1,0 +1,210 @@
+{
+	"deploy": {
+		"VM:-": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"main:1": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"ropsten:3": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"rinkeby:4": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"kovan:42": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"goerli:5": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"Custom": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		}
+	},
+	"data": {
+		"bytecode": {
+			"functionDebugData": {},
+			"generatedSources": [],
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"deployedBytecode": {
+			"functionDebugData": {},
+			"generatedSources": [],
+			"immutableReferences": {},
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"gasEstimates": null,
+		"methodIdentifiers": {
+			"balanceOf(address)": "70a08231",
+			"claim((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),bytes,uint256,uint256)": "41b96771",
+			"latestRoundData()": "feaf968c",
+			"withdraw(uint256)": "2e1a7d4d"
+		}
+	},
+	"abi": [
+		{
+			"inputs": [],
+			"name": "WrongAmount",
+			"type": "error"
+		},
+		{
+			"inputs": [],
+			"name": "WrongMakingAmount",
+			"type": "error"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "makingAmount",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "takingAmount",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "bytes32",
+					"name": "orderHash",
+					"type": "bytes32"
+				}
+			],
+			"name": "Claimed",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "account",
+					"type": "address"
+				}
+			],
+			"name": "balanceOf",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "balance",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"components": [
+						{
+							"internalType": "uint256",
+							"name": "salt",
+							"type": "uint256"
+						},
+						{
+							"internalType": "Address",
+							"name": "maker",
+							"type": "uint256"
+						},
+						{
+							"internalType": "Address",
+							"name": "receiver",
+							"type": "uint256"
+						},
+						{
+							"internalType": "Address",
+							"name": "makerAsset",
+							"type": "uint256"
+						},
+						{
+							"internalType": "Address",
+							"name": "takerAsset",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "makingAmount",
+							"type": "uint256"
+						},
+						{
+							"internalType": "uint256",
+							"name": "takingAmount",
+							"type": "uint256"
+						},
+						{
+							"internalType": "MakerTraits",
+							"name": "makerTraits",
+							"type": "uint256"
+						}
+					],
+					"internalType": "struct IOrderMixin.Order",
+					"name": "order",
+					"type": "tuple"
+				},
+				{
+					"internalType": "bytes",
+					"name": "signature",
+					"type": "bytes"
+				},
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				},
+				{
+					"internalType": "TakerTraits",
+					"name": "takerTraits",
+					"type": "uint256"
+				}
+			],
+			"name": "claim",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "latestRoundData",
+			"outputs": [
+				{
+					"internalType": "int256",
+					"name": "tokenPrice",
+					"type": "int256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "amount",
+					"type": "uint256"
+				}
+			],
+			"name": "withdraw",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		}
+	]
+}

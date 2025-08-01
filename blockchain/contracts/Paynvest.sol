@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { SafeERC20, IERC20 } from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { IPaynvest } from "./interfaces/IPaynvest.sol";
 import { IPapayaSimplified } from "./interfaces/IPapayaSimplified.sol";
@@ -35,18 +36,19 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     mapping(address account => User user) public users;
 
     constructor(
-        IERC20 weth_, 
+        IERC20 weth_,
+        address token_, 
         address TOKEN_PAIR_PRICE_FEED_,
         IPapayaSimplified papaya_,
         IOrderMixin limit_order_
     ) {
         owner = msg.sender;
-        TOKEN = PAPAYA.TOKEN();
+        TOKEN = IERC20(token_);
         WETH = weth_;
         PAPAYA = papaya_;
         LIMIT_ORDER = limit_order_;
         TOKEN_PAIR_PRICE_FEED = AggregatorV3Interface(TOKEN_PAIR_PRICE_FEED_);
-        DECIMALS_SCALE = PAPAYA.DECIMALS_SCALE();
+        DECIMALS_SCALE = 10 ** (18 - IERC20Metadata(token_).decimals());
     }
 
     function claim(

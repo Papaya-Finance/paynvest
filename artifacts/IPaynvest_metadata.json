@@ -1,0 +1,228 @@
+{
+	"compiler": {
+		"version": "0.8.28+commit.7893614a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "WrongAmount",
+				"type": "error"
+			},
+			{
+				"inputs": [],
+				"name": "WrongMakingAmount",
+				"type": "error"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "makingAmount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "takingAmount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "orderHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "Claimed",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					}
+				],
+				"name": "balanceOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "balance",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "salt",
+								"type": "uint256"
+							},
+							{
+								"internalType": "Address",
+								"name": "maker",
+								"type": "uint256"
+							},
+							{
+								"internalType": "Address",
+								"name": "receiver",
+								"type": "uint256"
+							},
+							{
+								"internalType": "Address",
+								"name": "makerAsset",
+								"type": "uint256"
+							},
+							{
+								"internalType": "Address",
+								"name": "takerAsset",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "makingAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "takingAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "MakerTraits",
+								"name": "makerTraits",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct IOrderMixin.Order",
+						"name": "order",
+						"type": "tuple"
+					},
+					{
+						"internalType": "bytes",
+						"name": "signature",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "TakerTraits",
+						"name": "takerTraits",
+						"type": "uint256"
+					}
+				],
+				"name": "claim",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "latestRoundData",
+				"outputs": [
+					{
+						"internalType": "int256",
+						"name": "tokenPrice",
+						"type": "int256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "withdraw",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"blockchain/contracts/interfaces/IPaynvest.sol": "IPaynvest"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@1inch/limit-order-protocol-contract/contracts/interfaces/IOrderMixin.sol": {
+			"keccak256": "0x39cfb84ae74a276eae63d7b3be898104045f98163405190227ddae3e85f6dd11",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://a01b28e4f02c63d241ab1e2a73e3918f9c73b669f0a09346968e9bfce3145558",
+				"dweb:/ipfs/QmS4rHEKT5JJe8T7eU4ykFf1GDRnfHd68u67NHidrYpbqu"
+			]
+		},
+		"@1inch/limit-order-protocol-contract/contracts/libraries/MakerTraitsLib.sol": {
+			"keccak256": "0x9506febc99293a286356a03cb150ad82ccb88be1b4c908183e1273b41fcb902c",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6856cda827012834b33f95358877724322323b686f506a7ab78ab6b27e93f874",
+				"dweb:/ipfs/QmX1juk7zU59K6nmi63fz8RMEAeZvZHRUnn3JH7FEZzcyS"
+			]
+		},
+		"@1inch/limit-order-protocol-contract/contracts/libraries/TakerTraitsLib.sol": {
+			"keccak256": "0x144f154a46e8daa0fec5b8215f1d8d3b694cb939236aa7bf89976b27965c2837",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8f23137afedddf14558f8ed65b7ab2fbb1d9fef29d728208ed5688a7d3fcd974",
+				"dweb:/ipfs/QmfAzyJViWvYAgoSrnKHZSRx36VF8xwdLQjhEw1Y6PGok9"
+			]
+		},
+		"@1inch/solidity-utils/contracts/libraries/AddressLib.sol": {
+			"keccak256": "0xe860b410ed5371b9732daab80982eef0a42ae48474716a89725ca744e27b7d75",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://3f12dfcc4aae2acb16afd6557ecbda6ec019e084463fd0fb08bc906d4416f59e",
+				"dweb:/ipfs/QmSC48i8UngVeNyHzEKPjaXAJ74sfCS9FBCyY8uH6eLEe1"
+			]
+		},
+		"blockchain/contracts/interfaces/IPaynvest.sol": {
+			"keccak256": "0x607005ab8bacce4cd0a265f3a09f5b8fa490b144b371f4d7f3c2831fed0ddfc4",
+			"license": "BUSL-1.1",
+			"urls": [
+				"bzz-raw://5833886194fea0b2cb89c06bd8b825097b5d3423cdc18427d57340ed0172b910",
+				"dweb:/ipfs/QmSvfK3C1TSnakHhhwGSFuMCXe3bKetrbAemy5nEozmzax"
+			]
+		}
+	},
+	"version": 1
+}
