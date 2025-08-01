@@ -27,7 +27,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     IERC20 public immutable USDC;
     IPapayaSimplified public immutable PAPAYA;
     IOrderMixin public immutable LIMIT_ORDER;
-    AggregatorV3Interface public immutable TOKEN_PRICE_FEED;
+    AggregatorV3Interface public immutable TOKEN_PRICE_FEED; //USDC/WETH
     uint256 public immutable TOKEN_SCALED;
 
     mapping(address account => User user) public users;
@@ -58,17 +58,24 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     ) external {
         uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
 
-        //Здесь мы узнаем сколько можно купить эфира за 1 usdc
         (, int256 tokenPrice, , , ) = TOKEN_PRICE_FEED.latestRoundData(); //1e18
 
         averagePartOfToken *= iteration++;
         averagePartOfToken = (averagePartOfToken + uint256(tokenPrice)) / iteration; //1e18
 
+        uint256 amountOfToken = currentBalance * averagePartOfToken;
+
+        if(currentBalance /= TOKEN_SCALED != order.makingAmount) {
+            revert WrongMakingAmount();
+        }
+
+        if(amount != amountOfToken) {
+            revert WrongAmount();
+        }
+
         PAPAYA.withdraw(currentBalance);
 
-        USDC.forceApprove(address(LIMIT_ORDER), currentBalance /= TOKEN_SCALED);
-
-        uint256 amountOfToken = currentBalance * averagePartOfToken;
+        USDC.forceApprove(address(LIMIT_ORDER), currentBalance);
 
         (uint256 makingAmount, uint256 takingAmount, bytes32 orderHash) = LIMIT_ORDER.fillContractOrder(
             order,
@@ -90,9 +97,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         WETH.safeTransferFrom(address(this), msg.sender, amount);
     }
 
-    function balanceOf(address account) external view returns (uint256 balance) {
-        uint256 periodsPassed = _periodsPassed(users[account].streamStarted, 0);
-        balance = users[account].rate * periodsPassed * averagePriceOfToken;
+    function balanceOf(address account) external view returns (uint256) {
+        uint256 periodsPassed = _periodsPassed(users[account].updated, 0);
+        return users[account]balance + users[account].rate * periodsPassed * averagePartOfToken;
+    }
+
+    function latestRoundData() external view returns (int tokenPrice) {
+        (, tokenPrice, , , ) = TOKEN_PRICE_FEED.latestRoundData();
     }
 
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
@@ -107,7 +118,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
-        uint256 periodsPassed = _periodsPassed(users[from].streamStarted, 0);
+        uint256 periodsPassed = _periodsPassed(users[from].updated, 0);
         uint256 afterDelay = ((periodsPassed + 1) * CLAIM_PERIOD + initialTimestamp ) - block.timestamp;
 
         _sync(from, afterDelay);
@@ -132,11 +143,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         projectId = uint32(encodedRates >> 192);
         timestamp = uint32(encodedRates >> 224);
     }
-    //NOTE: Не забудь про нюансы с кол-вом нулей, та же самая проблема что и раньше
-    function _sync(address account, uint256 afterDelay) internal {
-        uint256 amountStreamed = users[account].rate * _periodsPassed(users[account].streamStarted, afterDelay);
 
-        users[account].balance = amountStreamed * averagePriceOfToken; 
+    function _sync(address account, uint256 afterDelay) internal {
+        uint256 amountStreamed = users[account].rate * _periodsPassed(users[account].updated, afterDelay);
+        if(amountStreamed > 0) {
+            users[account].balance += amountStreamed * averagePriceOfToken; 
+            users[account].updated = block.timestamp;
+        }
     }
 
     function _periodsPassed(uint256 streamStarted, uint256 afterDelay) internal view returns(uint256 periodsPassed) {
