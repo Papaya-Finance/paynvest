@@ -35,13 +35,12 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     mapping(address account => User user) public users;
 
     constructor(
-        address owner_, 
         IERC20 weth_, 
+        address TOKEN_PAIR_PRICE_FEED_,
         IPapayaSimplified papaya_,
-        IOrderMixin limit_order_,
-        address TOKEN_PAIR_PRICE_FEED_
+        IOrderMixin limit_order_
     ) {
-        owner = owner_;
+        owner = msg.sender;
         TOKEN = PAPAYA.TOKEN();
         WETH = weth_;
         PAPAYA = papaya_;
@@ -108,8 +107,10 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     function latestRoundData() external view returns (int tokenPrice) {
         (, tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData();
     }
-
+    //solhint
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
+        streamStarts;
+        
         (uint96 incomeAmount, , , uint32 timestamp) = _decodeRates(encodedRates);
 
         if(initialTimestamp == 0) {
@@ -121,6 +122,9 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
+        streamDeadline;
+        encodedRates;
+
         uint256 periodsPassed = _periodsPassed(users[from].updated, 0);
         uint256 afterDelay = ((periodsPassed + 1) * CLAIM_PERIOD + initialTimestamp ) - block.timestamp;
 
