@@ -26,30 +26,28 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     address public immutable owner;
     IERC20 public immutable WETH;
-    IERC20 public immutable USDC;
+    IERC20 public immutable TOKEN;
     IPapayaSimplified public immutable PAPAYA;
     IOrderMixin public immutable LIMIT_ORDER;
-    AggregatorV3Interface public immutable TOKEN_PRICE_FEED; //USDC/WETH
-    uint256 public immutable TOKEN_SCALED;
+    AggregatorV3Interface public immutable TOKEN_PAIR_PRICE_FEED; //TOKEN/WETH
+    uint256 public immutable DECIMALS_SCALE;
 
     mapping(address account => User user) public users;
 
     constructor(
         address owner_, 
-        IERC20 usdc_, 
         IERC20 weth_, 
         IPapayaSimplified papaya_,
         IOrderMixin limit_order_,
-        address token_price_feed_, 
-        uint256 token_scaled_
+        address TOKEN_PAIR_PRICE_FEED_
     ) {
         owner = owner_;
-        USDC = usdc_;
+        TOKEN = PAPAYA.TOKEN();
         WETH = weth_;
         PAPAYA = papaya_;
         LIMIT_ORDER = limit_order_;
-        TOKEN_PRICE_FEED = AggregatorV3Interface(token_price_feed_);
-        TOKEN_SCALED = token_scaled_;
+        TOKEN_PAIR_PRICE_FEED = AggregatorV3Interface(TOKEN_PAIR_PRICE_FEED_);
+        DECIMALS_SCALE = PAPAYA.DECIMALS_SCALE();
     }
 
     function claim(
@@ -60,14 +58,14 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     ) external {
         uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
 
-        (, int256 tokenPrice, , , ) = TOKEN_PRICE_FEED.latestRoundData(); //1e18
+        (, int256 tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData(); //1e18
 
         averagePartOfToken *= iteration++;
         averagePartOfToken = (averagePartOfToken + uint256(tokenPrice)) / iteration; //1e18
 
         uint256 amountOfToken = currentBalance * averagePartOfToken;
 
-        if((currentBalance /= TOKEN_SCALED) != order.makingAmount) {
+        if((currentBalance /= DECIMALS_SCALE) != order.makingAmount) {
             revert WrongMakingAmount();
         }
 
@@ -77,7 +75,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
         PAPAYA.withdraw(currentBalance);
 
-        USDC.forceApprove(address(LIMIT_ORDER), currentBalance);
+        TOKEN.forceApprove(address(LIMIT_ORDER), currentBalance);
 
         (uint256 makingAmount, uint256 takingAmount, bytes32 orderHash) = LIMIT_ORDER.fillContractOrder(
             order,
@@ -108,7 +106,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function latestRoundData() external view returns (int tokenPrice) {
-        (, tokenPrice, , , ) = TOKEN_PRICE_FEED.latestRoundData();
+        (, tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData();
     }
 
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
