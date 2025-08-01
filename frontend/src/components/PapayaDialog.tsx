@@ -8,6 +8,7 @@ import { X, Loader2 } from "lucide-react";
 import { usePeriodPapaya } from "@/hooks/usePeriodPapaya";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 
 interface PapayaDialogProps {
   isOpen: boolean;
@@ -70,11 +71,13 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   }, [isOpen]);
 
   const checkApprovalStatus = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount) return;
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return;
 
     setIsCheckingApproval(true);
     try {
-      const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e6)); // USDC has 6 decimals
+      const amountInWei = BigInt(Math.floor(parsedAmount * 1e6)); // USDC has 6 decimals
       const isApproved = await checkApproval(amountInWei);
       setNeedsApproval(!isApproved);
     } catch (error) {
@@ -86,11 +89,17 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   };
 
   const handleApprove = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount) return;
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return;
 
     setIsLoading(true);
     try {
       await approveUSDC();
+      // Force re-check approval status after successful approval
+      setTimeout(() => {
+        checkApprovalStatus();
+      }, 2000); // Wait 2 seconds for transaction to be mined
       setNeedsApproval(false);
     } catch (error) {
       console.error("Approval failed:", error);
@@ -100,15 +109,29 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   };
 
   const handleSubmit = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount) return;
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return;
 
     setIsLoading(true);
     try {
       if (mode === "deposit") {
-        const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e6)); // USDC has 6 decimals
+        const amountInWei = BigInt(Math.floor(parsedAmount * 1e6)); // USDC has 6 decimals
+        console.log("Depositing USDC amount:", amountInWei.toString());
         await deposit(amountInWei);
+        // Reset approval status after successful deposit
+        setNeedsApproval(false);
       } else {
-        const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e18)); // Papaya has 18 decimals
+        const amountInWei = BigInt(Math.floor(parsedAmount * 1e18)); // Papaya has 18 decimals
+        console.log("Withdrawing Papaya amount:", amountInWei.toString());
+        
+        // Check if user has enough balance
+        const availableBalance = getAvailableBalance();
+        if (amountInWei > availableBalance) {
+          toast.error("Insufficient balance for withdrawal");
+          return;
+        }
+        
         await withdraw(amountInWei);
       }
       
@@ -164,9 +187,13 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
 
   // Validation functions
   const getAmountInWei = () => {
-    if (!amount || parseFloat(amount) <= 0) return BigInt(0);
-    const multiplier = mode === "deposit" ? 1e6 : 1e18; // USDC: 6 decimals, Papaya: 18 decimals
-    return BigInt(Math.floor(parseFloat(amount) * multiplier));
+    if (!amount) return BigInt(0);
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return BigInt(0);
+    // For withdraw, we need to convert Papaya tokens to wei (18 decimals)
+    // For deposit, we need to convert USDC to wei (6 decimals)
+    const multiplier = mode === "deposit" ? 1e6 : 1e18;
+    return BigInt(Math.floor(parsedAmount * multiplier));
   };
 
   const getAvailableBalance = () => {
@@ -184,7 +211,9 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   };
 
   const isButtonDisabled = () => {
-    if (isLoading || !amount || parseFloat(amount) <= 0) return true;
+    if (isLoading || !amount) return true;
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return true;
     if (mode === "deposit" && isCheckingApproval) return true;
     if (!isAmountValid()) return true;
     return false;

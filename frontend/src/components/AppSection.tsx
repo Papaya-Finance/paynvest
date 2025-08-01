@@ -105,12 +105,6 @@ export function AppSection({ onBack }: AppSectionProps) {
 
   const metricsIsLoading = totalInvestedLoading || ethBalanceLoading || ethPriceLoading;
 
-  // Validation functions for Investment Amount
-  const getAmountInWei = () => {
-    if (!amount || parseFloat(amount) <= 0) return BigInt(0);
-    return BigInt(Math.floor(parseFloat(amount) * 1e18)); // Papaya has 18 decimals
-  };
-
   const getAvailablePapayaBalance = () => {
     return papaya?.value || BigInt(0);
   };
@@ -123,7 +117,9 @@ export function AppSection({ onBack }: AppSectionProps) {
 
   const isCreateStrategyDisabled = () => {
     if (!isConnected) return false; // Show "Connect Wallet" instead
-    if (!amount || parseFloat(amount) <= 0) return true;
+    if (!amount) return true;
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return true;
     if (!isAmountValid()) return true;
     return false;
   };
@@ -133,6 +129,13 @@ export function AppSection({ onBack }: AppSectionProps) {
     if (/^\d*\.?\d*$/.test(value) || value === "") {
       setAmount(value);
     }
+  };
+
+  const getAmountInWei = () => {
+    if (!amount) return BigInt(0);
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return BigInt(0);
+    return BigInt(Math.floor(parsedAmount * 1e18)); // Papaya has 18 decimals
   };
 
   return (

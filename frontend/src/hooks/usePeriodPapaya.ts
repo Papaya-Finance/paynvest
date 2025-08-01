@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { toast } from "sonner";
 import PeriodPapayaABI from "@/lib/abi/PeriodPapaya.json";
 import type { UsePeriodPapayaReturn, SubscriptionData, TotalInvestedCalculation } from "@/types";
@@ -79,16 +79,23 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
 
   /**
    * Check if USDC approval is needed
-   * For now, always require approval for the first deposit
    */
   const checkApproval = useCallback(
     async (amount: bigint): Promise<boolean> => {
       if (!address) return false;
 
       try {
+        // TEMPORARY: Return true to test if approval flow works
+        // This will show "Deposit" button instead of "Approve"
+        console.log("Checking approval for amount:", amount.toString());
+        console.log("User address:", address);
+        console.log("PeriodPapaya contract:", contractConfig.address);
+        
+        // For testing: return true to simulate approved state
+        return true; // Change this to false to test approval flow
+        
         // TODO: Implement proper approval check when wagmi v2 API is stable
-        // For now, always require approval for the first deposit
-        return false;
+        // return false;
       } catch (error) {
         console.error("Failed to check approval:", error);
         return false; // Default to requiring approval on error
@@ -147,6 +154,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           ...contractConfig,
           functionName: "deposit",
           args: [amount, isPermit2],
+          gas: BigInt(300000), // Set reasonable gas limit
         });
 
         toast.success("Deposit transaction sent!");
@@ -176,18 +184,41 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
 
       setIsLoading(true);
       try {
+        console.log("Withdrawing amount:", amount.toString());
+        console.log("Contract address:", contractConfig.address);
+        
         const hash = await writeContractAsync({
           ...contractConfig,
           functionName: "withdraw",
           args: [amount],
+          gas: BigInt(300000), // Set reasonable gas limit
         });
 
         toast.success("Withdraw transaction sent!");
+        console.log("Withdraw transaction hash:", hash);
         
         return hash;
       } catch (error) {
         console.error("Withdraw failed:", error);
-        toast.error("Withdraw failed. Please try again.");
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        
+        // Check if it's a contract error
+        if (error && typeof error === 'object' && 'message' in error) {
+          const errorMessage = (error as any).message;
+          console.error("Error message:", errorMessage);
+          
+          if (errorMessage.includes("insufficient balance") || errorMessage.includes("InsufficialBalance")) {
+            toast.error("Insufficient balance for withdrawal");
+          } else if (errorMessage.includes("revert")) {
+            toast.error("Transaction failed. Please check your balance and try again.");
+          } else if (errorMessage.includes("gas")) {
+            toast.error("Transaction failed due to gas issues. Please try again.");
+          } else {
+            toast.error(`Withdraw failed: ${errorMessage}`);
+          }
+        } else {
+          toast.error("Withdraw failed. Please try again.");
+        }
         throw error;
       } finally {
         setIsLoading(false);
@@ -197,9 +228,8 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
   );
 
   /**
-   * Decode encodedRates using the same logic as _decodeRates in the contract
-   * @param encodedRates - Encoded rates from subscription data
-   * @returns Decoded values: incomeAmount, outgoingAmount, projectId, timestamp
+   * Decode rates from encoded subscription data
+   * Mirrors the Solidity _decodeRates function
    */
   const decodeRates = useCallback((encodedRates: bigint) => {
     const incomeAmount = encodedRates & BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -216,8 +246,9 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
   }, []);
 
   /**
-   * Get subscription data for calculating total invested
-   * Note: This is a placeholder - in wagmi v2 we need to use different approach
+   * Get subscription data for user
+   * @param userAddress - User's wallet address
+   * @param paynvestAddress - Paynvest contract address
    */
   const getSubscriptionData = useCallback(
     async (userAddress: `0x${string}`, paynvestAddress: `0x${string}`): Promise<SubscriptionData> => {
@@ -240,21 +271,14 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
    * Calculate total invested amount based on subscription data
    * @param userAddress - User's wallet address
    * @param paynvestAddress - Paynvest contract address
-   * @param refillDays - REFILL_DAYS constant from contract
+   * @param refillDays - Number of days for refill calculation
    */
   const calculateTotalInvested = useCallback(
-    async (
-      userAddress: `0x${string}`,
-      paynvestAddress: `0x${string}`,
-      refillDays: number
-    ): Promise<TotalInvestedCalculation> => {
+    async (userAddress: `0x${string}`, paynvestAddress: `0x${string}`, refillDays: number): Promise<TotalInvestedCalculation> => {
       try {
-        const { isActive, encodedRates } = await getSubscriptionData(
-          userAddress,
-          paynvestAddress
-        );
-
-        if (!isActive) {
+        const subscriptionData = await getSubscriptionData(userAddress, paynvestAddress);
+        
+        if (!subscriptionData.isActive) {
           return {
             totalInvested: BigInt(0),
             periodsPassed: 0,
@@ -263,21 +287,17 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           };
         }
 
-        // Decode encodedRates using the proper method
-        const { incomeAmount, outgoingAmount, projectId, timestamp } = decodeRates(encodedRates);
+        const decodedRates = decodeRates(subscriptionData.encodedRates);
+        const currentTime = Math.floor(Date.now() / 1000);
+        const periodsPassed = Math.floor((currentTime - decodedRates.timestamp) / (refillDays * 24 * 60 * 60));
         
-        const streamStarted = Number(timestamp);
-        const incomeRate = incomeAmount;
-
-        const now = Math.floor(Date.now() / 1000);
-        const periodsPassed = Math.floor((now - streamStarted) / (refillDays * 24 * 60 * 60));
-        const totalInvested = BigInt(periodsPassed) * incomeRate;
+        const totalInvested = decodedRates.incomeAmount * BigInt(periodsPassed);
 
         return {
           totalInvested,
           periodsPassed,
-          incomeRate,
-          streamStarted,
+          incomeRate: decodedRates.incomeAmount,
+          streamStarted: decodedRates.timestamp,
         };
       } catch (error) {
         console.error("Failed to calculate total invested:", error);

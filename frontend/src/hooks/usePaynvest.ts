@@ -22,6 +22,12 @@ export function usePaynvest(): UsePaynvestReturn {
     abi: PaynvestABI.abi,
   };
 
+  // Use useBalance hook at the top level
+  const { data: balanceData, isLoading: balanceLoading } = useBalance({
+    address,
+    token: contractConfig.address,
+  });
+
   /**
    * Get user's ETH balance from Paynvest contract
    * @param userAddress - User's wallet address
@@ -29,19 +35,14 @@ export function usePaynvest(): UsePaynvestReturn {
   const getBalance = useCallback(
     async (userAddress: `0x${string}`) => {
       try {
-        // Use useBalance hook to get balance
-        const { data: balance } = useBalance({
-          address: userAddress,
-          token: contractConfig.address,
-        });
-
-        return balance?.value || BigInt(0);
+        // Return the balance from the hook
+        return balanceData?.value || BigInt(0);
       } catch (error) {
         console.error("Failed to get balance:", error);
         throw error;
       }
     },
-    []
+    [balanceData]
   );
 
   /**
@@ -110,6 +111,6 @@ export function usePaynvest(): UsePaynvestReturn {
     getBalance,
     withdraw,
     claim,
-    isLoading,
+    isLoading: isLoading || balanceLoading,
   };
 } 
