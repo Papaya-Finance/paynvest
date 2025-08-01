@@ -9,12 +9,14 @@ import { IPaynvest } from "./interfaces/IPaynvest.sol";
 import { IPapayaSimplified } from "./interfaces/IPapayaSimplified.sol";
 import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
 
-import "@1inch/limit-order-protocol-contract/interfaces/IOrderMixin.sol";
+import "@1inch/limit-order-protocol-contract/contracts/interfaces/IOrderMixin.sol";
+import "@1inch/limit-order-protocol-contract/contracts/libraries/TakerTraitsLib.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     using SafeERC20 for IERC20;
+    using TakerTraitsLib for TakerTraits;
 
     uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with crt Papaya`s period
 
@@ -54,7 +56,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         IOrderMixin.Order calldata order,
         bytes calldata signature,
         uint256 amount,
-        IOrderMixin.TakerTraits takerTraits
+        TakerTraits takerTraits
     ) external {
         uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
 
@@ -65,7 +67,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
         uint256 amountOfToken = currentBalance * averagePartOfToken;
 
-        if(currentBalance /= TOKEN_SCALED != order.makingAmount) {
+        if((currentBalance /= TOKEN_SCALED) != order.makingAmount) {
             revert WrongMakingAmount();
         }
 
@@ -82,7 +84,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
             signature,
             amount,
             takerTraits
-        )
+        );
 
         emit Claimed(makingAmount, takingAmount, orderHash);
     }
@@ -98,8 +100,11 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function balanceOf(address account) external view returns (uint256) {
+        if(account == address(this)) {
+            return (uint256(PAPAYA.balanceOf(address(this))));
+        }
         uint256 periodsPassed = _periodsPassed(users[account].updated, 0);
-        return users[account]balance + users[account].rate * periodsPassed * averagePartOfToken;
+        return (users[account].balance + users[account].rate * periodsPassed * averagePartOfToken);
     }
 
     function latestRoundData() external view returns (int tokenPrice) {
@@ -114,7 +119,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         }
 
         users[from].rate = incomeAmount;
-        users[from].streamStarted = timestamp;
+        users[from].updated = timestamp;
     }
 
     function streamRevoked(address from, uint32 streamDeadline, uint256 encodedRates) external {
@@ -147,8 +152,8 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     function _sync(address account, uint256 afterDelay) internal {
         uint256 amountStreamed = users[account].rate * _periodsPassed(users[account].updated, afterDelay);
         if(amountStreamed > 0) {
-            users[account].balance += amountStreamed * averagePriceOfToken; 
-            users[account].updated = block.timestamp;
+            users[account].balance += amountStreamed * averagePartOfToken; 
+            users[account].updated = uint32(block.timestamp);
         }
     }
 
