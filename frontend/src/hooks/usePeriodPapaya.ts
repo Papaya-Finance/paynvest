@@ -24,7 +24,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
 
   // USDC contract configuration for approval
   const usdcContractConfig = {
-    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as `0x${string}`, // USDC on Ethereum
+    address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" as `0x${string}`, // USDC on Polygon
     abi: [
       {
         "inputs": [
@@ -154,7 +154,6 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           ...contractConfig,
           functionName: "deposit",
           args: [amount, isPermit2],
-          gas: BigInt(300000), // Set reasonable gas limit
         });
 
         toast.success("Deposit transaction sent!");

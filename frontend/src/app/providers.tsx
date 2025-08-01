@@ -24,7 +24,7 @@ const appKit = createAppKit({
   adapters: [wagmiAdapter],
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
   networks: [mainnet, polygon],
-  // defaultNetwork: polygon,
+  defaultNetwork: polygon,
   metadata,
   features: {
     analytics: true

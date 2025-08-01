@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAccount, useWalletClient } from "wagmi";
 import { PapayaSDK, formatInput } from "@papaya_fi/sdk";
 import { ethers } from "ethers";
+import { usePeriodPapaya } from "./usePeriodPapaya";
 
 /**
  * usePapayaDCAStrategy - интеграция Papaya SDK для депозита, вывода, запуска и остановки DCA-стратегии
@@ -21,6 +22,7 @@ export function usePapayaDCAStrategy() {
   const [papayaSDK, setPapayaSDK] = useState<any>(null);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const { deposit: depositPeriodPapaya} = usePeriodPapaya();
 
   // Инициализация Papaya SDK с ethers signer
   useEffect(() => {
@@ -39,10 +41,9 @@ export function usePapayaDCAStrategy() {
 
           // Create a Papaya SDK instance with signer
           const sdk = PapayaSDK.create(
-            signer, // Используем signer вместо window.ethereum
+            signer,
             'polygon',
-            'USDC',
-            '1.5.1'
+            'USDT',
           );
           
           console.log("PapayaSDK created:", sdk);
@@ -125,6 +126,7 @@ export function usePapayaDCAStrategy() {
         
         // Используем formattedAmount вместо хардкода
         const tx = await papayaSDK.deposit(formattedAmount);
+        // const tx = await depositPeriodPapaya(formattedAmount);
         
         toast.success(`Deposit successful! TX: ${tx.hash.slice(0, 10)}...`);
         const newTransaction: Omit<Transaction, "id"> = {
@@ -162,9 +164,8 @@ export function usePapayaDCAStrategy() {
       setIsLoading(true);
       try {
         // Format the amount correctly (Papaya tokens have 18 decimals)
-        const formattedAmount = formatInput(amount.toString(), 18);
-        
-        const tx = await papayaSDK.withdraw(formattedAmount);
+        console.log("Withdrawing amount:", amount);
+        const tx = await papayaSDK.withdraw(amount);
         toast.success(`Withdrawal successful! TX: ${tx.hash.slice(0, 10)}...`);
         const newTransaction: Omit<Transaction, "id"> = {
           strategyId: "withdraw",

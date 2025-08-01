@@ -33,7 +33,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
     checkUSDCApproval, 
     approveUSDC 
   } = usePapayaDCAStrategy();
-  const { usdc, papaya } = useWalletBalance();
+  const { usdc, usdt, papaya } = useWalletBalance();
 
   // Check approval status when dialog opens for deposit mode
   useEffect(() => {
@@ -121,24 +121,19 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
 
     setIsLoading(true);
     try {
-      if (mode === "deposit") {
-        const amountInWei = BigInt(Math.floor(parsedAmount * 1e6)); // USDC has 6 decimals
-        console.log("Depositing USDC amount:", amountInWei.toString());
-        await deposit(amountInWei);
+      if (mode === "deposit") {        
+        await deposit(BigInt(parsedAmount));
         // Reset approval status after successful deposit
         setNeedsApproval(false);
-      } else {
-        const amountInWei = BigInt(Math.floor(parsedAmount * 1e18)); // Papaya has 18 decimals
-        console.log("Withdrawing Papaya amount:", amountInWei.toString());
-        
+      } else {        
         // Check if user has enough balance
         const availableBalance = getAvailableBalance();
-        if (amountInWei > availableBalance) {
+        if (parsedAmount > availableBalance) {
           toast.error("Insufficient balance for withdrawal");
           return;
         }
         
-        await withdraw(amountInWei);
+        await withdraw(BigInt(parsedAmount*10**18));
       }
       
       setAmount("");
@@ -152,7 +147,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
 
   const getBalance = () => {
     if (mode === "deposit") {
-      return usdc?.formatted || "0";
+      return usdt?.formatted || "0";
     } else {
       return papaya?.formatted || "0";
     }
