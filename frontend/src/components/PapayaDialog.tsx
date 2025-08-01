@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { X, Loader2 } from "lucide-react";
-import { usePeriodPapaya } from "@/hooks/usePeriodPapaya";
+import { usePapayaDCAStrategy } from "@/hooks/usePapayaDCAStrategy";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ interface PapayaDialogProps {
 
 /**
  * Dialog component for Papaya deposit/withdraw operations
- * Includes approval flow for deposits
+ * Uses PapayaDCAStrategy for all operations including approval
  */
 export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   const [amount, setAmount] = useState("");
@@ -26,7 +26,13 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
   const [needsApproval, setNeedsApproval] = useState(false);
   const [isCheckingApproval, setIsCheckingApproval] = useState(false);
 
-  const { deposit, withdraw, checkApproval, approveUSDC } = usePeriodPapaya();
+  // Use PapayaDCAStrategy for all operations
+  const { 
+    deposit, 
+    withdraw, 
+    checkUSDCApproval, 
+    approveUSDC 
+  } = usePapayaDCAStrategy();
   const { usdc, papaya } = useWalletBalance();
 
   // Check approval status when dialog opens for deposit mode
@@ -78,7 +84,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
     setIsCheckingApproval(true);
     try {
       const amountInWei = BigInt(Math.floor(parsedAmount * 1e6)); // USDC has 6 decimals
-      const isApproved = await checkApproval(amountInWei);
+      const isApproved = await checkUSDCApproval(amountInWei);
       setNeedsApproval(!isApproved);
     } catch (error) {
       console.error("Failed to check approval status:", error);

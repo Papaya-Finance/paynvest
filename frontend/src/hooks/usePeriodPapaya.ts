@@ -87,9 +87,9 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
       try {
         // TEMPORARY: Return true to test if approval flow works
         // This will show "Deposit" button instead of "Approve"
-        console.log("Checking approval for amount:", amount.toString());
-        console.log("User address:", address);
-        console.log("PeriodPapaya contract:", contractConfig.address);
+        // console.log("Checking approval for amount:", amount.toString());
+        // console.log("User address:", address);
+        // console.log("PeriodPapaya contract:", contractConfig.address);
         
         // For testing: return true to simulate approved state
         return true; // Change this to false to test approval flow

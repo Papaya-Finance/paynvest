@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { ThemeProvider } from 'next-themes'
 import { wagmiAdapter, wagmiConfig } from '@/lib/wagmi'
-import { mainnet } from 'wagmi/chains'
+import { mainnet, polygon } from 'wagmi/chains'
 
 const queryClient = new QueryClient()
 
@@ -23,8 +23,8 @@ const metadata = {
 const appKit = createAppKit({
   adapters: [wagmiAdapter],
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-  networks: [mainnet],
-  defaultNetwork: mainnet,
+  networks: [mainnet, polygon],
+  // defaultNetwork: polygon,
   metadata,
   features: {
     analytics: true

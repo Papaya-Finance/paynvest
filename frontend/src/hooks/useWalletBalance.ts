@@ -3,11 +3,18 @@
 import { useAccount, useBalance } from 'wagmi'
 import { useMemo } from 'react'
 
-// Token addresses on Ethereum mainnet
+// Token addresses for different networks
 const TOKENS = {
-  USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-  USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  PAPAYA: process.env.NEXT_PUBLIC_PERIOD_PAPAYA_CONTRACT_ADDRESS as `0x${string}`,
+  // Ethereum mainnet
+  ethereum: {
+    USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  },
+  // Polygon
+  polygon: {
+    USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    USDC: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+  },
 } as const
 
 export interface WalletBalance {
@@ -42,14 +49,18 @@ export interface WalletBalance {
 
 /**
  * Hook to get wallet balances for ETH, USDT, USDC, and Papaya
- * Can be used anywhere in the application
+ * Supports both Ethereum mainnet and Polygon
  * 
  * @returns WalletBalance object with all token balances
  */
 export function useWalletBalance(): WalletBalance {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
 
-  // ETH balance (native token)
+  // Determine current network
+  const isPolygon = chain?.id === 137
+  const currentTokens = isPolygon ? TOKENS.polygon : TOKENS.ethereum
+
+  // ETH/MATIC balance (native token)
   const { data: ethBalance, isLoading: isEthLoading } = useBalance({
     address,
   })
@@ -57,19 +68,19 @@ export function useWalletBalance(): WalletBalance {
   // USDT balance
   const { data: usdtBalance, isLoading: isUsdtLoading } = useBalance({
     address,
-    token: TOKENS.USDT as `0x${string}`,
+    token: currentTokens.USDT as `0x${string}`,
   })
 
   // USDC balance
   const { data: usdcBalance, isLoading: isUsdcLoading } = useBalance({
     address,
-    token: TOKENS.USDC as `0x${string}`,
+    token: currentTokens.USDC as `0x${string}`,
   })
 
   // Papaya balance
   const { data: papayaBalance, isLoading: isPapayaLoading } = useBalance({
     address,
-    token: TOKENS.PAPAYA as `0x${string}`,
+    token: process.env.NEXT_PUBLIC_PERIOD_PAPAYA_CONTRACT_ADDRESS as `0x${string}`,
   })
 
   const isLoading = isEthLoading || isUsdtLoading || isUsdcLoading || isPapayaLoading
@@ -94,11 +105,15 @@ export function useWalletBalance(): WalletBalance {
  * @returns Balance data for specific token
  */
 export function useTokenBalance(token: 'eth' | 'usdt' | 'usdc' | 'papaya') {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
+
+  // Determine current network
+  const isPolygon = chain?.id === 137
+  const currentTokens = isPolygon ? TOKENS.polygon : TOKENS.ethereum
 
   const { data: balance, isLoading } = useBalance({
     address,
-    token: token === 'eth' ? undefined : TOKENS[token.toUpperCase() as keyof typeof TOKENS] as `0x${string}`,
+    token: token === 'eth' ? undefined : currentTokens[token.toUpperCase() as keyof typeof currentTokens] as `0x${string}`,
   })
 
   return {

@@ -6,12 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Activity, Loader2 } from 'lucide-react'
 import InvestmentInput from './InvestmentInput'
-import { TransactionHistory } from './TransactionHistory'
-import { useDCAStrategy } from '@/hooks/useDCAStrategy'
+import { usePapayaDCAStrategy } from '@/hooks/usePapayaDCAStrategy'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
 import { PapayaBalance } from './PapayaBalance'
-import { DashboardMetrics } from './DashboardMetrics'
 import { useTotalInvested } from '@/hooks/useTotalInvested'
 import { useEthBalance } from '@/hooks/useEthBalance'
 import { useEthPrice } from '@/hooks/useEthPrice'
@@ -33,11 +31,13 @@ export function AppSection({ onBack }: AppSectionProps) {
     ethPrice, 
     isLoading: dcaIsLoading, 
     isPriceLoading,
+    deposit,
+    withdraw,
     createStrategy,
     stopStrategy,
     claimETH,
-    activeStrategy // добавлено
-  } = useDCAStrategy()
+    activeStrategy
+  } = usePapayaDCAStrategy()
   
   // Real data hooks
   const { totalInvested, isLoading: totalInvestedLoading } = useTotalInvested();
@@ -77,6 +77,30 @@ export function AppSection({ onBack }: AppSectionProps) {
       await claimETH()
     } catch (error) {
       console.error('Failed to claim ETH:', error)
+    }
+  }
+
+  const handleDeposit = async () => {
+    if (!amount) return
+    
+    try {
+      const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e18))
+      await deposit(amountInWei)
+      setAmount('') // Clear input after successful deposit
+    } catch (error) {
+      console.error('Failed to deposit:', error)
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!amount) return
+    
+    try {
+      const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e18))
+      await withdraw(amountInWei)
+      setAmount('') // Clear input after successful withdrawal
+    } catch (error) {
+      console.error('Failed to withdraw:', error)
     }
   }
 
@@ -170,6 +194,79 @@ export function AppSection({ onBack }: AppSectionProps) {
               
               {/* Papaya Balance */}
               <PapayaBalance />
+              
+              {/* Deposit/Withdraw Section */}
+              <Card className="border border-muted shadow-lg gap-2">
+                <CardHeader>
+                  <CardTitle>
+                    Deposit / Withdraw
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="mt-1">
+                  <InvestmentInput
+                    value={amount}
+                    onChange={handleAmountChange}
+                    placeholder="0"
+                    fontSize={36}
+                    fontWeight={600}
+                    className={`!bg-background ${!isAmountValid() && amount ? 'border-red-500' : ''}`}
+                    classNameContainer='bg-background'
+                  />
+                  <div className="flex items-center mb-2">
+                    <span className="text-xs text-muted-foreground">
+                      Papaya Balance: {papaya?.formatted || 0} USDC
+                    </span>
+                  </div>
+                  {!isAmountValid() && amount && (
+                    <p className="text-xs text-red-500 mb-2">
+                      Amount exceeds Papaya balance
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-4">
+                    {!isConnected ? (
+                      <Button
+                        onClick={() => {open()}}
+                        variant="default"
+                        className="w-full"
+                      >
+                        Connect Wallet
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleDeposit}
+                          disabled={!amount || parseFloat(amount) <= 0 || dcaIsLoading}
+                          className="w-full"
+                        >
+                          {dcaIsLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Depositing...
+                            </>
+                          ) : (
+                            'Deposit'
+                          )}
+                        </Button>
+                        <Button
+                          onClick={handleWithdraw}
+                          disabled={!amount || parseFloat(amount) <= 0 || !isAmountValid() || dcaIsLoading}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          {dcaIsLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Withdrawing...
+                            </>
+                          ) : (
+                            'Withdraw'
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
               
               {/* Investment Input */}
               <Card className="border border-muted shadow-lg gap-2">
