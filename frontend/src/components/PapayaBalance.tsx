@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePapayaBalance } from "@/hooks/usePapayaBalance";
 import { PapayaDialog } from "./PapayaDialog";
+import { useWalletBalance } from "@/hooks/useWalletBalance";
 import Image from "next/image";
 
 /**
@@ -15,6 +16,7 @@ export function PapayaBalance() {
   const [dialogMode, setDialogMode] = useState<"deposit" | "withdraw">("deposit");
   
   const { formattedBalance, isLoading } = usePapayaBalance();
+  const { papaya } = useWalletBalance();
 
   const handleOpenDialog = (mode: "deposit" | "withdraw") => {
     setDialogMode(mode);
@@ -49,7 +51,7 @@ export function PapayaBalance() {
               </div>
               <span className="text-md font-mono">
                 {/* {isLoading ? "Loading..." : formattedBalance} */}
-                {formattedBalance}
+                {!papaya ? "Loading..." : (Number(papaya?.formatted).toFixed(6))}
               </span>
             </div>
             

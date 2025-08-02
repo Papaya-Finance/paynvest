@@ -122,7 +122,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
     setIsLoading(true);
     try {
       if (mode === "deposit") {        
-        await deposit(BigInt(parsedAmount));
+        await deposit(BigInt(parsedAmount*10**6));
         // Reset approval status after successful deposit
         setNeedsApproval(false);
       } else {        

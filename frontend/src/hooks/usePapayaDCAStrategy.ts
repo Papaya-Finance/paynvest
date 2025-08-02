@@ -9,6 +9,7 @@ import { useAccount, useWalletClient } from "wagmi";
 import { PapayaSDK, formatInput, RatePeriod } from "@papaya_fi/sdk";
 import { ethers } from "ethers";
 import { usePeriodPapaya } from "./usePeriodPapaya";
+import { usePaynvest } from "./usePaynvest";
 
 /**
  * usePapayaDCAStrategy - интеграция Papaya SDK для депозита, вывода, запуска и остановки DCA-стратегии
@@ -23,6 +24,7 @@ export function usePapayaDCAStrategy() {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const { deposit: depositPeriodPapaya, subscribe } = usePeriodPapaya();
+  const { withdraw: withdrawPaynvest, getBalance } = usePaynvest();
 
   // Инициализация Papaya SDK с ethers signer
   useEffect(() => {
@@ -121,11 +123,11 @@ export function usePapayaDCAStrategy() {
       setIsLoading(true);
       try {
         // Format the amount correctly (USDC has 6 decimals)
-        const formattedAmount = formatInput(amount.toString(), 6);
-        console.log("formattedAmount", formattedAmount);
+        // const formattedAmount = formatInput(amount.toString(), 6);
+        console.log("formattedAmount", amount);
         
         // Используем formattedAmount вместо хардкода
-        const tx = await papayaSDK.deposit(formattedAmount);
+        const tx = await papayaSDK.deposit(amount);
         // const tx = await depositPeriodPapaya(formattedAmount);
         
         toast.success(`Deposit successful! TX: ${tx.hash.slice(0, 10)}...`);
@@ -237,13 +239,19 @@ export function usePapayaDCAStrategy() {
           RatePeriod.WEEK,
           0
         );
+        // const am1 = BigInt(Math.floor(amount * 1e6)) * BigInt(1e12);
+        // const am = am1 / BigInt(604800);
 
-        // await subscribe(creatorAddress, formattedAmount, 0);
+        // const tx = await subscribe(creatorAddress, am, 0);
         
         // Check if transaction was successful
         if (!tx || !tx.hash) {
           throw new Error("Transaction failed - no hash returned");
         }
+        
+        // Wait for transaction confirmation
+        toast.info("Transaction sent! Waiting for confirmation...");
+        await tx.wait();
         
         const newStrategy: DCAStrategy = {
           id: `strategy_${Date.now()}`,
@@ -301,27 +309,34 @@ export function usePapayaDCAStrategy() {
   );
 
   /**
-   * Клейм ETH через Papaya SDK
-   * Note: This method doesn't exist in the current Papaya SDK
-   * You might need to implement this differently based on your requirements
+   * Клейм ETH через Paynvest контракт
+   * Получает актуальный баланс через balanceOf и выводит весь доступный ETH
    */
   const claimETH = useCallback(
     async () => {
-      if (!papayaSDK || !address || !walletClient) {
+      if (!address) {
         toast.error("Please connect your wallet first");
-        return;
-      }
-      if (portfolioMetrics.totalETH === 0) {
-        toast.error("No ETH available to claim");
         return;
       }
       setIsLoading(true);
       try {
-        // TODO: Implement proper ETH claiming logic
-        // The current Papaya SDK doesn't have a claimETH method
-        // You might need to interact with the contract directly or use a different approach
-        toast.error("ETH claiming not implemented yet");
-        throw new Error("ETH claiming not implemented yet");
+        // Получаем актуальный баланс через balanceOf
+        const currentBalance = await getBalance(address);
+        
+        if (currentBalance === BigInt(0)) {
+          toast.error("No ETH available to claim");
+          return;
+        }
+        
+        console.log("Current ETH balance from contract:", currentBalance.toString());
+        
+        // Выводим весь доступный ETH
+        const hash = await withdrawPaynvest(currentBalance);
+        
+        toast.success("ETH claim transaction sent!");
+        console.log("ETH claim transaction hash:", hash);
+        
+        return hash;
       } catch (error) {
         console.error("Error claiming ETH:", error);
         toast.error(error instanceof Error ? error.message : "Failed to claim ETH");
@@ -330,7 +345,7 @@ export function usePapayaDCAStrategy() {
         setIsLoading(false);
       }
     },
-    [papayaSDK, address, walletClient, portfolioMetrics.totalETH]
+    [address, withdrawPaynvest, getBalance]
   );
 
   const deleteStrategy = useCallback(

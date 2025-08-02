@@ -294,7 +294,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                       )}
                         <Button 
                           onClick={handleClaimETH}
-                          disabled={dcaIsLoading || portfolioMetrics.totalETH === 0}
+                          disabled={dcaIsLoading || ethBalance === BigInt(0)}
                           className="w-full"
                         >
                           {dcaIsLoading ? (

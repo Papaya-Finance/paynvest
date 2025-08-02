@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useAccount, useWriteContract, useBalance } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { toast } from "sonner";
 import PaynvestABI from "@/lib/abi/Paynvest.json";
 import type { UsePaynvestReturn } from "@/types";
@@ -22,27 +22,27 @@ export function usePaynvest(): UsePaynvestReturn {
     abi: PaynvestABI.abi,
   };
 
-  // Use useBalance hook at the top level
-  const { data: balanceData, isLoading: balanceLoading } = useBalance({
-    address,
-    token: contractConfig.address,
-  });
-
   /**
-   * Get user's ETH balance from Paynvest contract
+   * Get user's ETH balance from Paynvest contract using balanceOf method
    * @param userAddress - User's wallet address
    */
   const getBalance = useCallback(
     async (userAddress: `0x${string}`) => {
       try {
-        // Return the balance from the hook
-        return balanceData?.value || BigInt(0);
+        const { readContract } = await import("wagmi");
+        const balance = await readContract({
+          ...contractConfig,
+          functionName: "balanceOf",
+          args: [userAddress],
+        });
+        
+        return balance as bigint;
       } catch (error) {
         console.error("Failed to get balance:", error);
         throw error;
       }
     },
-    [balanceData]
+    [contractConfig]
   );
 
   /**
@@ -75,7 +75,7 @@ export function usePaynvest(): UsePaynvestReturn {
         setIsLoading(false);
       }
     },
-    [address, writeContractAsync]
+    [address, writeContractAsync, contractConfig]
   );
 
   /**
@@ -105,12 +105,12 @@ export function usePaynvest(): UsePaynvestReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [address, writeContractAsync]);
+  }, [address, writeContractAsync, contractConfig]);
 
   return {
     getBalance,
     withdraw,
     claim,
-    isLoading: isLoading || balanceLoading,
+    isLoading,
   };
 } 

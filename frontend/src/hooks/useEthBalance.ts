@@ -15,7 +15,7 @@ export function useEthBalance() {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Fetch ETH balance from Paynvest contract
+   * Fetch ETH balance from Paynvest contract using balanceOf method
    */
   const fetchBalance = useCallback(async () => {
     if (!address) {
