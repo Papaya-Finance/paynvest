@@ -2,7 +2,6 @@ export interface DCAStrategy {
   id: string
   amount: number
   token: 'USDT' | 'USDC'
-  frequency: 'daily' | 'weekly' | 'monthly'
   isActive: boolean
   createdAt: Date
   lastExecuted?: Date
@@ -64,6 +63,7 @@ export interface TotalInvestedCalculation {
 export interface UsePeriodPapayaReturn {
   deposit: (amount: bigint, isPermit2?: boolean) => Promise<any>;
   withdraw: (amount: bigint) => Promise<any>;
+  subscribe: (author: `0x${string}`, subscriptionAmount: bigint, projectId: number) => Promise<any>;
   getSubscriptionData: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`) => Promise<SubscriptionData>;
   calculateTotalInvested: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`, refillDays: number) => Promise<TotalInvestedCalculation>;
   decodeRates: (encodedRates: bigint) => DecodedRates;

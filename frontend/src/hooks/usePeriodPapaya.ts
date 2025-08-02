@@ -104,6 +104,41 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     [address]
   );
 
+   /**
+   * Subscribe to a creator's stream
+   * @param author - Creator's address
+   * @param subscriptionAmount - Amount to subscribe in wei
+   * @param projectId - Project ID
+   */
+   const subscribe = useCallback(
+    async (author: `0x${string}`, subscriptionAmount: bigint, projectId: number) => {
+      if (!address) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const hash = await writeContractAsync({
+          ...contractConfig,
+          functionName: "subscribe",
+          args: [author, subscriptionAmount, projectId],
+        });
+
+        toast.success("Subscribe transaction sent!");
+        
+        return hash;
+      } catch (error) {
+        console.error("Subscribe failed:", error);
+        toast.error("Subscribe failed. Please try again.");
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [address, writeContractAsync]
+  );
+
   /**
    * Approve USDC tokens for PeriodPapaya contract
    */
@@ -314,6 +349,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     decodeRates,
     checkApproval,
     approveUSDC,
+    subscribe,
     isLoading,
   };
 } 

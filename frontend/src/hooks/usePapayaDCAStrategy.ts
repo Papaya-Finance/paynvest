@@ -6,7 +6,7 @@ import { DCAStrategy, Transaction } from "@/types";
 import { fetchMockETHPrice, generateMockTransactions } from "@/lib/mockData";
 import { toast } from "sonner";
 import { useAccount, useWalletClient } from "wagmi";
-import { PapayaSDK, formatInput } from "@papaya_fi/sdk";
+import { PapayaSDK, formatInput, RatePeriod } from "@papaya_fi/sdk";
 import { ethers } from "ethers";
 import { usePeriodPapaya } from "./usePeriodPapaya";
 
@@ -22,7 +22,7 @@ export function usePapayaDCAStrategy() {
   const [papayaSDK, setPapayaSDK] = useState<any>(null);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
-  const { deposit: depositPeriodPapaya} = usePeriodPapaya();
+  const { deposit: depositPeriodPapaya, subscribe } = usePeriodPapaya();
 
   // Инициализация Papaya SDK с ethers signer
   useEffect(() => {
@@ -197,7 +197,6 @@ export function usePapayaDCAStrategy() {
     async (
       amount: number,
       token: "USDT" | "USDC",
-      frequency: "daily" | "weekly" | "monthly"
     ) => {
       if (!papayaSDK || !address || !walletClient) {
         toast.error("Please connect your wallet first");
@@ -207,28 +206,49 @@ export function usePapayaDCAStrategy() {
       try {
         // Format the amount correctly (USDC has 6 decimals, USDT has 6 decimals)
         const decimals = token === "USDC" ? 6 : 6;
-        const formattedAmount = formatInput(amount.toString(), decimals);
+        const formattedAmount = formatInput(amount.toString(), 18);
+        console.log("UNDEFINED", amount);
         
-        // Convert frequency to RatePeriod
-        const period = frequency === "daily" ? 1 : frequency === "weekly" ? 7 : 30;
+        // Get creator address from environment variable
+        const creatorAddress = process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`;
+        if (!creatorAddress) {
+          throw new Error("NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS is not defined");
+        }
         
-        // For now, we'll use a default creator address and project ID
-        // In a real implementation, you'd get these from your app's context
-        const creatorAddress = "0x0000000000000000000000000000000000000000"; // Default creator
+        // Set period to 1 second for immediate execution
+        const period = 1; // 1 second
         const projectId = 0; // Default project ID
         
-        const tx = await papayaSDK.subscribe(
+        console.log("Creating strategy with:", {
           creatorAddress,
           formattedAmount,
           period,
           projectId
+        });
+        
+        // Check if subscribe method exists
+        if (!papayaSDK.subscribe) {
+          throw new Error("subscribe method not available in PapayaSDK");
+        }
+        
+        const tx = await papayaSDK.subscribe(
+          creatorAddress,
+          amount,
+          RatePeriod.WEEK,
+          0
         );
+
+        // await subscribe(creatorAddress, formattedAmount, 0);
+        
+        // Check if transaction was successful
+        if (!tx || !tx.hash) {
+          throw new Error("Transaction failed - no hash returned");
+        }
         
         const newStrategy: DCAStrategy = {
           id: `strategy_${Date.now()}`,
-          amount,
+          amount: Number(amount),
           token,
-          frequency,
           isActive: true,
           createdAt: new Date(),
           totalInvested: 0,
@@ -263,7 +283,7 @@ export function usePapayaDCAStrategy() {
       try {
         // For now, we'll use a default creator address
         // In a real implementation, you'd get this from the strategy data
-        const creatorAddress = "0x0000000000000000000000000000000000000000"; // Default creator
+        const creatorAddress = process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`; // Default creator
         
         const tx = await papayaSDK.unsubscribe(creatorAddress);
         updateStrategy(activeStrategy.id, { isActive: false });

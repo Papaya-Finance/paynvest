@@ -50,15 +50,14 @@ export function AppSection({ onBack }: AppSectionProps) {
 
   const handleCreateStrategy = async (
     amount: number, 
-    token: 'USDT' | 'USDC', 
-    frequency: 'daily' | 'weekly' | 'monthly'
+    token: 'USDT' | 'USDC'
   ) => {
     if (!isConnected) {
       return
     }
     
     try {
-      await createStrategy(amount, token, frequency)
+      await createStrategy(amount, token)
     } catch (error) {
       console.error('Failed to create strategy:', error)
     }
@@ -237,7 +236,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                           onClick={() => {
                             const num = parseFloat(amount.replace(',', '.'));
                             if (!isNaN(num)) {
-                              handleCreateStrategy(num, 'USDT', 'weekly');
+                              handleCreateStrategy(num, 'USDT');
                             }
                           }}
                           disabled={isCreateStrategyDisabled()}
@@ -255,7 +254,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                             <p className="text-sm text-muted-foreground">
                               {activeStrategy ? (
                                 <>
-                                  Strategy: <span className="font-semibold">{activeStrategy.amount} {activeStrategy.token}</span> every <span className="font-semibold">{activeStrategy.frequency}</span>
+                                  Strategy: <span className="font-semibold">{activeStrategy.amount} {activeStrategy.token}</span> every <span className="font-semibold"> in a day.</span>
                                 </>
                               ) : (
                                 'Your DCA strategy is running automatically'
