@@ -10,14 +10,11 @@ import { IPaynvest } from "./interfaces/IPaynvest.sol";
 import { IPapayaSimplified } from "./interfaces/IPapayaSimplified.sol";
 import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
 
-import "@1inch/limit-order-protocol-contract/contracts/interfaces/IOrderMixin.sol";
-import "@1inch/limit-order-protocol-contract/contracts/libraries/TakerTraitsLib.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
 
     using SafeERC20 for IERC20;
-    using TakerTraitsLib for TakerTraits;
 
     uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with crt Papaya`s period
 
@@ -26,12 +23,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     uint256 averagePartOfToken;
 
     address public immutable owner;
+    address public immutable LIMIT_ORDER_PROTOCOL;
     IERC20 public immutable WETH;
     IERC20 public immutable TOKEN;
     IPapayaSimplified public immutable PAPAYA;
-    IOrderMixin public immutable LIMIT_ORDER;
     AggregatorV3Interface public immutable TOKEN_PAIR_PRICE_FEED; //TOKEN/WETH
     uint256 public immutable DECIMALS_SCALE;
+    uint256 public immutable not_processed_balance;
 
     mapping(address account => User user) public users;
 
@@ -40,23 +38,18 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         address token_, 
         address TOKEN_PAIR_PRICE_FEED_,
         IPapayaSimplified papaya_,
-        IOrderMixin limit_order_
+        address limit_order_protocol_
     ) {
         owner = msg.sender;
         TOKEN = IERC20(token_);
         WETH = weth_;
         PAPAYA = papaya_;
-        LIMIT_ORDER = limit_order_;
+        LIMIT_ORDER_PROTOCOL = limit_order_protocol_;
         TOKEN_PAIR_PRICE_FEED = AggregatorV3Interface(TOKEN_PAIR_PRICE_FEED_);
         DECIMALS_SCALE = 10 ** (18 - IERC20Metadata(token_).decimals());
     }
 
-    function claim(
-        IOrderMixin.Order calldata order,
-        bytes calldata signature,
-        uint256 amount,
-        TakerTraits takerTraits
-    ) external {
+    function claim(uint256 tokenAmount) external {
         uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
 
         (, int256 tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData(); //1e18
@@ -64,28 +57,13 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         averagePartOfToken *= iteration++;
         averagePartOfToken = (averagePartOfToken + uint256(tokenPrice)) / iteration; //1e18
 
-        uint256 amountOfToken = currentBalance * averagePartOfToken;
-
-        if((currentBalance /= DECIMALS_SCALE) != order.makingAmount) {
+        if((currentBalance /= DECIMALS_SCALE) <= tokenAmount) {
             revert WrongMakingAmount();
-        }
-
-        if(amount != amountOfToken) {
-            revert WrongAmount();
         }
 
         PAPAYA.withdraw(currentBalance);
 
-        TOKEN.forceApprove(address(LIMIT_ORDER), currentBalance);
-
-        (uint256 makingAmount, uint256 takingAmount, bytes32 orderHash) = LIMIT_ORDER.fillContractOrder(
-            order,
-            signature,
-            amount,
-            takerTraits
-        );
-
-        emit Claimed(makingAmount, takingAmount, orderHash);
+        TOKEN.forceApprove(owner, tokenAmount);
     }
 
     function withdraw(uint256 amount) external {
@@ -109,7 +87,7 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     function latestRoundData() external view returns (int tokenPrice) {
         (, tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData();
     }
-    //solhint
+
     function streamCreated(address from, uint32 streamStarts, uint256 encodedRates) external {
         streamStarts;
         
@@ -162,6 +140,6 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     }
 
     function _periodsPassed(uint256 streamStarted, uint256 afterDelay) internal view returns(uint256 periodsPassed) {
-        periodsPassed = (block.timestamp - streamStarted + afterDelay) % CLAIM_PERIOD;
+        periodsPassed = (block.timestamp - streamStarted + afterDelay) / CLAIM_PERIOD;
     }
 }

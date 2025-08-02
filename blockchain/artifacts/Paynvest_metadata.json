@@ -14,6 +14,11 @@
 					},
 					{
 						"internalType": "address",
+						"name": "token_",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
 						"name": "TOKEN_PAIR_PRICE_FEED_",
 						"type": "address"
 					},
@@ -23,8 +28,8 @@
 						"type": "address"
 					},
 					{
-						"internalType": "contract IOrderMixin",
-						"name": "limit_order_",
+						"internalType": "address",
+						"name": "limit_order_protocol_",
 						"type": "address"
 					}
 				],
@@ -104,10 +109,10 @@
 			},
 			{
 				"inputs": [],
-				"name": "LIMIT_ORDER",
+				"name": "LIMIT_ORDER_PROTOCOL",
 				"outputs": [
 					{
-						"internalType": "contract IOrderMixin",
+						"internalType": "address",
 						"name": "",
 						"type": "address"
 					}
@@ -189,65 +194,8 @@
 			{
 				"inputs": [
 					{
-						"components": [
-							{
-								"internalType": "uint256",
-								"name": "salt",
-								"type": "uint256"
-							},
-							{
-								"internalType": "Address",
-								"name": "maker",
-								"type": "uint256"
-							},
-							{
-								"internalType": "Address",
-								"name": "receiver",
-								"type": "uint256"
-							},
-							{
-								"internalType": "Address",
-								"name": "makerAsset",
-								"type": "uint256"
-							},
-							{
-								"internalType": "Address",
-								"name": "takerAsset",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "makingAmount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "takingAmount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "MakerTraits",
-								"name": "makerTraits",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct IOrderMixin.Order",
-						"name": "order",
-						"type": "tuple"
-					},
-					{
-						"internalType": "bytes",
-						"name": "signature",
-						"type": "bytes"
-					},
-					{
 						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "TakerTraits",
-						"name": "takerTraits",
+						"name": "tokenAmount",
 						"type": "uint256"
 					}
 				],
@@ -288,6 +236,19 @@
 						"internalType": "int256",
 						"name": "tokenPrice",
 						"type": "int256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "not_processed_balance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -430,30 +391,6 @@
 		"remappings": []
 	},
 	"sources": {
-		"@1inch/limit-order-protocol-contract/contracts/interfaces/IOrderMixin.sol": {
-			"keccak256": "0x39cfb84ae74a276eae63d7b3be898104045f98163405190227ddae3e85f6dd11",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://a01b28e4f02c63d241ab1e2a73e3918f9c73b669f0a09346968e9bfce3145558",
-				"dweb:/ipfs/QmS4rHEKT5JJe8T7eU4ykFf1GDRnfHd68u67NHidrYpbqu"
-			]
-		},
-		"@1inch/limit-order-protocol-contract/contracts/libraries/MakerTraitsLib.sol": {
-			"keccak256": "0x9506febc99293a286356a03cb150ad82ccb88be1b4c908183e1273b41fcb902c",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://6856cda827012834b33f95358877724322323b686f506a7ab78ab6b27e93f874",
-				"dweb:/ipfs/QmX1juk7zU59K6nmi63fz8RMEAeZvZHRUnn3JH7FEZzcyS"
-			]
-		},
-		"@1inch/limit-order-protocol-contract/contracts/libraries/TakerTraitsLib.sol": {
-			"keccak256": "0x144f154a46e8daa0fec5b8215f1d8d3b694cb939236aa7bf89976b27965c2837",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://8f23137afedddf14558f8ed65b7ab2fbb1d9fef29d728208ed5688a7d3fcd974",
-				"dweb:/ipfs/QmfAzyJViWvYAgoSrnKHZSRx36VF8xwdLQjhEw1Y6PGok9"
-			]
-		},
 		"@1inch/solidity-utils/contracts/interfaces/IDaiLikePermit.sol": {
 			"keccak256": "0xf8636c1c4631641c7b40ac65cd69e6ae04a99cf3358426c642dec02c6c774c82",
 			"license": "MIT",
@@ -484,14 +421,6 @@
 			"urls": [
 				"bzz-raw://c0dc26b14df9a1fd2ce184299a37c8c3bbaad534c04818c946142d4f4fc4e8d7",
 				"dweb:/ipfs/QmaQ4rcitKKqvZ9cUF8ZwWt4dni4faSyAjBnqQMoL9sB5K"
-			]
-		},
-		"@1inch/solidity-utils/contracts/libraries/AddressLib.sol": {
-			"keccak256": "0xe860b410ed5371b9732daab80982eef0a42ae48474716a89725ca744e27b7d75",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://3f12dfcc4aae2acb16afd6557ecbda6ec019e084463fd0fb08bc906d4416f59e",
-				"dweb:/ipfs/QmSC48i8UngVeNyHzEKPjaXAJ74sfCS9FBCyY8uH6eLEe1"
 			]
 		},
 		"@1inch/solidity-utils/contracts/libraries/RevertReasonForwarder.sol": {
@@ -534,6 +463,14 @@
 				"dweb:/ipfs/QmeTTxZ7qVk9rjEv2R4CpCwdf8UMCcRqDNMvzNxHc3Fnn9"
 			]
 		},
+		"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
+			"keccak256": "0x70f2f713b13b7ce4610bcd0ac9fec0f3cc43693b043abcb8dc40a42a726eb330",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c13d13304ac79a83ab1c30168967d19e2203342ebbd6a9bbce4db7550522dcbf",
+				"dweb:/ipfs/QmeN5jKMN2vw5bhacr6tkg78afbTTZUeaacNHqjWt4Ew1r"
+			]
+		},
 		"@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol": {
 			"keccak256": "0x27dbc90e5136ffe46c04f7596fc2dbcc3acebd8d504da3d93fdb8496e6de04f6",
 			"license": "MIT",
@@ -559,11 +496,11 @@
 			]
 		},
 		"contracts/Paynvest.sol": {
-			"keccak256": "0x3ab6dbada93838638296b2b5b484ec916f8e873bef392dfda7fa1b29038304ff",
+			"keccak256": "0x44fb282d9015b71cb489768a5e45d07c08ccc63b2ddc8d258873e146d22b0a40",
 			"license": "BUSL-1.1",
 			"urls": [
-				"bzz-raw://45f247e9239ed290d691c04a948ee7e1c06e05e9579eb90ef8278e3f2cd7552f",
-				"dweb:/ipfs/QmVKu7ZFk9y4nXTepMDJegtKRT3ZeeDkuaHj2AtVAVMUeZ"
+				"bzz-raw://a78ae968bf430c49bc6c7437f9ffd2a0fd36a416f6899b4362e3e0f56987d2c5",
+				"dweb:/ipfs/QmSiws7YAiFBQJQTBXWM1DnECvunKBFPhesWBHaeybLFPA"
 			]
 		},
 		"contracts/interfaces/IPapayaNotification.sol": {
@@ -575,19 +512,19 @@
 			]
 		},
 		"contracts/interfaces/IPapayaSimplified.sol": {
-			"keccak256": "0x1b72e7ec4e3f65d4b87b85563fdef966b41b5ccd3946bb26aa1343978df3f8f3",
+			"keccak256": "0x0c078194fcf1f8e2ac36972df6bc5c0ae2d8758e3f250eb56a84525efdc24606",
 			"license": "BUSL-1.1",
 			"urls": [
-				"bzz-raw://6ad2d8660be438866c5b3890354b22c5977cb4f16c2cd8ffeb639833efd1f53e",
-				"dweb:/ipfs/QmYoQjqtxgmdXr3QrrMzxEkhMXRLkVs1oU2wUfo8xguv8e"
+				"bzz-raw://0a63201d4e41e257c15664f08ce0f188617b5ecc5c0933f4a9f9922ece67b0ed",
+				"dweb:/ipfs/QmZdrGXPpygbNMH98vvrYRrfwQgWBSxCcHgnpirkzSix3B"
 			]
 		},
 		"contracts/interfaces/IPaynvest.sol": {
-			"keccak256": "0x607005ab8bacce4cd0a265f3a09f5b8fa490b144b371f4d7f3c2831fed0ddfc4",
+			"keccak256": "0x2694fc0469a2abf6bfb2c48c3f5fd3c4cf7f01fed3ef15cbd2f73b85d8f2b4cc",
 			"license": "BUSL-1.1",
 			"urls": [
-				"bzz-raw://5833886194fea0b2cb89c06bd8b825097b5d3423cdc18427d57340ed0172b910",
-				"dweb:/ipfs/QmSvfK3C1TSnakHhhwGSFuMCXe3bKetrbAemy5nEozmzax"
+				"bzz-raw://9b03440afaeda29f189641f61fdc2efbba5414ed151654a498644299c6361ac2",
+				"dweb:/ipfs/QmVVDvip5rhubWL9XH5VpscHSYhbcGHgyqkTdrGwc8eT6E"
 			]
 		}
 	},

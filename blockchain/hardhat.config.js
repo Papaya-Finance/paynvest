@@ -26,6 +26,11 @@ const { networks, etherscan } = (new Networks()).registerAll();
 
 module.exports = {
     etherscan,
+    etherscan: {
+        apiKey: {
+            polygon: `${process.env.POLYGONSCAN_API_KEY}` || '',
+        }
+    },
     tracer: {
         enableAllOpcodes: true
     },
@@ -87,6 +92,11 @@ module.exports = {
                 auto: true,
                 interval: 5000,
             },
+        },
+        polygon: {
+            chainId: 137,
+            url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_POLYGON_KEY}`,
+            accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [`${process.env.DEPLOYER_PRIVATE_KEY}`] : ['0000000000000000000000000000000000000000000000000000000000000001'],
         },
       }
     }
