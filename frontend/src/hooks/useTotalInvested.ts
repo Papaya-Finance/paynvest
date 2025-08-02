@@ -38,6 +38,7 @@ export function useTotalInvested() {
         paynvestAddress
       );
       console.log("TOTAL INVESTED (FIXED)", result);
+      // setTotalInvested(result.totalInvested);
       setTotalInvested(result.totalInvested);
     } catch (err) {
       console.error("Failed to calculate total invested:", err);

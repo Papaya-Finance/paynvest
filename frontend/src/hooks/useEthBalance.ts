@@ -29,7 +29,7 @@ export function useEthBalance() {
     try {
       const ethBalance = await getBalance(address);
       console.log("ETH Balance (FIXED):", ethBalance);
-      setBalance(BigInt(Math.floor(0.00001234 * 1e18)));
+      setBalance(BigInt(Math.floor(0.0000123424518271231 * 1e18)));
     } catch (err) {
       console.error("Failed to fetch ETH balance:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch balance");

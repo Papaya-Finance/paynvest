@@ -6,6 +6,7 @@ import { readContract } from "@wagmi/core";
 import { wagmiConfig } from "@/lib/wagmi";
 import { toast } from "sonner";
 import PeriodPapayaABI from "@/lib/abi/PeriodPapaya.json";
+import { decodeRates } from "@papaya_fi/sdk";
 import type { UsePeriodPapayaReturn, SubscriptionData, TotalInvestedCalculation } from "@/types";
 
 /**
@@ -295,7 +296,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           functionName: 'subscriptions',
           args: [userAddress, paynvestAddress],
         });
-
+        console.log("SUBSCRIPTION RESULT", subscriptionResult);
         if (!subscriptionResult) {
           return {
             isActive: false,
@@ -329,13 +330,13 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
   const getRefillDays = useCallback(async (): Promise<number> => {
     try {
       // TODO: Fix contract reading - temporarily commented out
-      // const refillDays = await readContract(wagmiConfig, {
-      //   ...contractConfig,
-      //   functionName: 'REFILL_DAYS',
-      // });
-      
-      // return Number(refillDays) || 7; // Default to 7 days if not available
-      return 7; // Temporary fallback
+      const refillDays = await readContract(wagmiConfig, {
+        ...contractConfig,
+        functionName: 'REFILL_DAYS',
+      });
+      console.log("REFILL DAYS", refillDays);
+      return Number(refillDays) || 7; // Default to 7 days if not available
+      // return 7; // Temporary fallback
     } catch (error) {
       console.error("Failed to get REFILL_DAYS:", error);
       return 7; // Default fallback
@@ -364,12 +365,14 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         const decodedRates = decodeRates(subscriptionData.encodedRates);
         const refillDays = await getRefillDays();
         const currentTime = Math.floor(Date.now() / 1000);
-        
+        console.log("DECODED RATES", decodedRates);
+
         // Calculate periods passed: (now() - streamStarted) / REFILL_DAYS
         const periodsPassed = Math.floor((currentTime - decodedRates.timestamp) / (refillDays * 24 * 60 * 60));
         
         // Calculate total invested: periodsPassed * incomeRate
-        const totalInvested = decodedRates.incomeAmount * BigInt(periodsPassed);
+        // const totalInvested = decodedRates.outgoingAmount * BigInt(periodsPassed);
+        const totalInvested = decodedRates.outgoingAmount;
 
         return {
           totalInvested,
