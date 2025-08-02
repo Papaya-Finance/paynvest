@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAccount } from 'wagmi'
 
 /**
@@ -13,6 +13,10 @@ export function useLocalStorage<T>(
   bindToWallet: boolean = true
 ): [T, (value: T | ((val: T) => T)) => void] {
   const { address } = useAccount();
+  const initialValueRef = useRef(initialValue);
+  
+  // Обновляем ref при изменении initialValue
+  initialValueRef.current = initialValue;
   
   // Create wallet-specific key if bindToWallet is true
   const storageKey = bindToWallet && address 
@@ -22,7 +26,7 @@ export function useLocalStorage<T>(
   // Debug logging - только при первом создании ключа
   if (bindToWallet && address) {
     // Логируем только один раз при инициализации
-    console.log(`🔐 LocalStorage bound to wallet: ${key} -> ${storageKey}`);
+    // console.log(`🔐 LocalStorage bound to wallet: ${key} -> ${storageKey}`);
   }
 
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -32,15 +36,15 @@ export function useLocalStorage<T>(
     
     // Если привязка к кошельку включена, но адрес отсутствует, возвращаем начальное значение
     if (bindToWallet && !address) {
-      return initialValue
+      return initialValueRef.current
     }
     
     try {
       const item = window.localStorage.getItem(storageKey)
-      return item ? JSON.parse(item) : initialValue
+      return item ? JSON.parse(item) : initialValueRef.current
     } catch (error) {
       console.warn(`Error reading localStorage key "${storageKey}":`, error)
-      return initialValue
+      return initialValueRef.current
     }
   })
 
@@ -53,7 +57,7 @@ export function useLocalStorage<T>(
     // Если привязка к кошельку включена, но адрес отсутствует, сбрасываем к начальному значению
     if (bindToWallet && !address) {
       // console.log(`🔐 Wallet disconnected, resetting ${key} to initial value`);
-      setStoredValue(initialValue)
+      setStoredValue(initialValueRef.current)
       return
     }
     
@@ -63,7 +67,7 @@ export function useLocalStorage<T>(
         : key;
         
       const item = window.localStorage.getItem(newStorageKey)
-      const newValue = item ? JSON.parse(item) : initialValue
+      const newValue = item ? JSON.parse(item) : initialValueRef.current
       // Логируем только при изменении адреса кошелька
       if (bindToWallet && address) {
         // console.log(`🔐 Wallet connected (${address.slice(0, 6)}...), loading ${key}: ${item ? 'found data' : 'no data, using initial value'}`);
@@ -71,9 +75,9 @@ export function useLocalStorage<T>(
       setStoredValue(newValue)
     } catch (error) {
       console.warn(`Error reading localStorage key "${storageKey}":`, error)
-      setStoredValue(initialValue)
+      setStoredValue(initialValueRef.current)
     }
-  }, [address, key, bindToWallet, initialValue])
+  }, [address, key, bindToWallet])
 
   const setValue = (value: T | ((val: T) => T)) => {
     try {

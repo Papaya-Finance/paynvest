@@ -221,8 +221,8 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
 
       setIsLoading(true);
       try {
-        console.log("Withdrawing amount:", amount.toString());
-        console.log("Contract address:", contractConfig.address);
+            // console.log("Withdrawing amount:", amount.toString());
+    // console.log("Contract address:", contractConfig.address);
         
         const hash = await writeContractAsync({
           ...contractConfig,
@@ -232,7 +232,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         });
 
         toast.success("Withdraw transaction sent!");
-        console.log("Withdraw transaction hash:", hash);
+        // console.log("Withdraw transaction hash:", hash);
         
         return hash;
       } catch (error) {
@@ -296,7 +296,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
           functionName: 'subscriptions',
           args: [userAddress, paynvestAddress],
         });
-        console.log("SUBSCRIPTION RESULT", subscriptionResult);
+        // console.log("SUBSCRIPTION RESULT", subscriptionResult);
         if (!subscriptionResult) {
           return {
             isActive: false,
@@ -334,7 +334,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         ...contractConfig,
         functionName: 'REFILL_DAYS',
       });
-      console.log("REFILL DAYS", refillDays);
+      // console.log("REFILL DAYS", refillDays);
       return Number(refillDays) || 7; // Default to 7 days if not available
       // return 7; // Temporary fallback
     } catch (error) {
@@ -365,7 +365,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         const decodedRates = decodeRates(subscriptionData.encodedRates);
         const refillDays = await getRefillDays();
         const currentTime = Math.floor(Date.now() / 1000);
-        console.log("DECODED RATES", decodedRates);
+        // console.log("DECODED RATES", decodedRates);
 
         // Calculate periods passed: (now() - streamStarted) / REFILL_DAYS
         const periodsPassed = Math.floor((currentTime - decodedRates.timestamp) / (refillDays * 24 * 60 * 60));

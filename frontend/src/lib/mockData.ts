@@ -56,9 +56,9 @@ export const simulateWeb3Operation = async (
   operation: string, 
   delay: number = 2000
 ): Promise<void> => {
-  console.log(`Starting ${operation}...`)
+  // console.log(`Starting ${operation}...`)
   await new Promise(resolve => setTimeout(resolve, delay))
-  console.log(`${operation} completed`)
+  // console.log(`${operation} completed`)
 }
 
 /**

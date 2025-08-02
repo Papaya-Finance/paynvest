@@ -31,15 +31,15 @@ export function usePapayaDCAStrategy() {
     const initializeSDK = async () => {
       if (walletClient && address) {
         try {
-          console.log("=== INITIALIZING PAPAYA SDK ===");
+          // console.log("=== INITIALIZING PAPAYA SDK ===");
           
           // Create an ethers provider from the walletClient
           const provider = new ethers.BrowserProvider(walletClient);
           const signer = await provider.getSigner();
           
-          console.log("Provider:", provider);
-          console.log("Signer:", signer);
-          console.log("Signer address:", await signer.getAddress());
+          // console.log("Provider:", provider);
+          // console.log("Signer:", signer);
+          // console.log("Signer address:", await signer.getAddress());
 
           // Create a Papaya SDK instance with signer
           const sdk = PapayaSDK.create(
@@ -48,7 +48,7 @@ export function usePapayaDCAStrategy() {
             'USDT',
           );
           
-          console.log("PapayaSDK created:", sdk);
+          // console.log("PapayaSDK created:", sdk);
           setPapayaSDK(sdk);
         } catch (error) {
           console.error("Failed to initialize Papaya SDK:", error);
@@ -152,7 +152,7 @@ export function usePapayaDCAStrategy() {
       try {
         // Format the amount correctly (USDC has 6 decimals)
         // const formattedAmount = formatInput(amount.toString(), 6);
-        console.log("formattedAmount", amount);
+        // console.log("formattedAmount", amount);
         
         // Используем formattedAmount вместо хардкода
         const tx = await papayaSDK.deposit(amount);
@@ -194,7 +194,7 @@ export function usePapayaDCAStrategy() {
       setIsLoading(true);
       try {
         // Format the amount correctly (Papaya tokens have 18 decimals)
-        console.log("Withdrawing amount:", amount);
+        // console.log("Withdrawing amount:", amount);
         const tx = await papayaSDK.withdraw(amount);
         toast.success(`Withdrawal successful! TX: ${tx.hash.slice(0, 10)}...`);
         const newTransaction: Omit<Transaction, "id"> = {
@@ -237,7 +237,7 @@ export function usePapayaDCAStrategy() {
         // Format the amount correctly (USDC has 6 decimals, USDT has 6 decimals)
         const decimals = token === "USDC" ? 6 : 6;
         const formattedAmount = formatInput(amount.toString(), 18);
-        console.log("UNDEFINED", amount);
+        // console.log("UNDEFINED", amount);
         
         // Get creator address from environment variable
         const creatorAddress = process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`;
@@ -249,12 +249,12 @@ export function usePapayaDCAStrategy() {
         const period = 1; // 1 second
         const projectId = 0; // Default project ID
         
-        console.log("Creating strategy with:", {
-          creatorAddress,
-          formattedAmount,
-          period,
-          projectId
-        });
+        // console.log("Creating strategy with:", {
+        //   creatorAddress,
+        //   formattedAmount,
+        //   period,
+        //   projectId
+        // });
         
         // Check if subscribe method exists
         if (!papayaSDK.subscribe) {
@@ -356,13 +356,13 @@ export function usePapayaDCAStrategy() {
           return;
         }
         
-        console.log("Current ETH balance from contract:", currentBalance.toString());
+        // console.log("Current ETH balance from contract:", currentBalance.toString());
         
         // Выводим весь доступный ETH
         const hash = await withdrawPaynvest(currentBalance);
         
         toast.success("ETH claim transaction sent!");
-        console.log("ETH claim transaction hash:", hash);
+        // console.log("ETH claim transaction hash:", hash);
         
         return hash;
       } catch (error) {
@@ -411,13 +411,13 @@ export function usePapayaDCAStrategy() {
       if (!papayaSDK || !address) return false;
 
       try {
-        console.log("=== CHECKING USDC APPROVAL ===");
-        console.log("Amount to check:", amount.toString());
-        console.log("User address:", address);
+        // console.log("=== CHECKING USDC APPROVAL ===");
+        // console.log("Amount to check:", amount.toString());
+        // console.log("User address:", address);
         
         // Get USDC contract address from SDK
         const usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; // Polygon USDC
-        console.log("USDC contract address:", usdcAddress);
+        // console.log("USDC contract address:", usdcAddress);
         
         // Check allowance using ethers
         if (!walletClient) {
@@ -442,11 +442,11 @@ export function usePapayaDCAStrategy() {
           "0x43CFA1D8bd93179D89BF7bF3268E5861385a1c96"; // Papaya contract address
         
         const allowance = await usdcContract.allowance(address, contractAddress);
-        console.log("Current allowance:", allowance.toString());
-        console.log("Required amount:", amount.toString());
+        // console.log("Current allowance:", allowance.toString());
+        // console.log("Required amount:", amount.toString());
         
         const isApproved = allowance >= amount;
-        console.log("Is approved:", isApproved);
+        // console.log("Is approved:", isApproved);
         
         return isApproved;
       } catch (error) {
@@ -469,8 +469,8 @@ export function usePapayaDCAStrategy() {
 
       setIsLoading(true);
       try {
-        console.log("=== APPROVING USDC ===");
-        console.log("User address:", address);
+        // console.log("=== APPROVING USDC ===");
+        // console.log("User address:", address);
         
         const { ethers } = await import('ethers');
         const provider = new ethers.BrowserProvider(walletClient);
@@ -487,7 +487,7 @@ export function usePapayaDCAStrategy() {
         
         // Infinite allowance
         const infiniteAmount = ethers.MaxUint256;
-        console.log("Approving infinite amount:", infiniteAmount.toString());
+        // console.log("Approving infinite amount:", infiniteAmount.toString());
         
         // Get contract address - use hardcoded address if SDK method doesn't exist
         const contractAddress = papayaSDK.getContractAddress ? 
@@ -495,7 +495,7 @@ export function usePapayaDCAStrategy() {
           "0x43CFA1D8bd93179D89BF7bF3268E5861385a1c96"; // Papaya contract address
         
         const tx = await usdcContract.approve(contractAddress, infiniteAmount);
-        console.log("Approval transaction:", tx.hash);
+        // console.log("Approval transaction:", tx.hash);
         
         toast.success("Approval transaction sent!");
         return tx;

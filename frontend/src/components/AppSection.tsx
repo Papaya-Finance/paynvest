@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Activity, Loader2 } from 'lucide-react'
 import InvestmentInput from './InvestmentInput'
+import { MetricCard } from './DashboardMetrics'
 import { usePapayaDCAStrategy } from '@/hooks/usePapayaDCAStrategy'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useWalletBalance } from '@/hooks/useWalletBalance'
@@ -314,73 +315,30 @@ export function AppSection({ onBack }: AppSectionProps) {
 
               {/* Metrics Cards */}
               <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
-                <Card className="border border-muted bg-muted shadow-none">
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Total Invested</p>
-                        <p className="text-xl font-bold">
-                          {metricsIsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            formatCurrency(Number(totalInvested) / 1e18)
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-purple-500 bg-purple-100 dark:bg-purple-900/30 shadow-none">
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-primary/80">ETH Balance</p>
-                        <p className="text-xl font-bold">
-                          {metricsIsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            formatEthBalance(ethBalance)
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-muted bg-muted shadow-none">
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Current ETH Price</p>
-                        <p className="text-xl font-bold flex items-center">
-                          {metricsIsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : (
-                            realEthPrice ? formatCurrency(realEthPrice) : "N/A"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-muted bg-muted shadow-none">
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Portfolio Value</p>
-                        <p className="text-xl font-bold">
-                          {metricsIsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            formatCurrency(portfolioValue)
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <MetricCard
+                  title="Total Invested"
+                  value={formatCurrency(Number(totalInvested) / 1e18)}
+                  isLoading={metricsIsLoading}
+                />
+                
+                <MetricCard
+                  title="ETH Balance"
+                  value={formatEthBalance(ethBalance)}
+                  isLoading={metricsIsLoading}
+                  className="border-purple-500 bg-purple-100 dark:bg-purple-900/30"
+                />
+                
+                <MetricCard
+                  title="Current ETH Price"
+                  value={realEthPrice ? formatCurrency(realEthPrice) : "N/A"}
+                  isLoading={metricsIsLoading}
+                />
+                
+                <MetricCard
+                  title="Portfolio Value"
+                  value={formatCurrency(portfolioValue)}
+                  isLoading={metricsIsLoading}
+                />
               </div>
           
 
