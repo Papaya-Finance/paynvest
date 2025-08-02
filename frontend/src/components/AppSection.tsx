@@ -108,13 +108,13 @@ export function AppSection({ onBack }: AppSectionProps) {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 12,
     }).format(value);
   };
 
   const formatEthBalance = (balance: bigint) => {
     const ethAmount = Number(balance) / 1e18;
-    return ethAmount.toFixed(6);
+    return ethAmount.toFixed(12);
   };
 
   // Calculate portfolio value using real data

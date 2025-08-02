@@ -16,7 +16,7 @@ export function useTotalInvested() {
   const [error, setError] = useState<string | null>(null);
 
   // REFILL_DAYS constant from contract (should be fetched from contract)
-  const REFILL_DAYS = 30; // Default value, should be fetched from contract
+  const REFILL_DAYS = 1; // Default value, should be fetched from contract
 
   /**
    * Calculate total invested amount
@@ -35,10 +35,9 @@ export function useTotalInvested() {
       
       const result = await calculateTotalInvested(
         address,
-        paynvestAddress,
-        REFILL_DAYS
+        paynvestAddress
       );
-
+      console.log("TOTAL INVESTED (FIXED)", result);
       setTotalInvested(result.totalInvested);
     } catch (err) {
       console.error("Failed to calculate total invested:", err);
@@ -47,18 +46,23 @@ export function useTotalInvested() {
     } finally {
       setIsLoading(false);
     }
-  }, [address, calculateTotalInvested]);
+  }, [address]); // Убрали calculateTotalInvested из зависимостей
 
   // Calculate on mount and when address changes
   useEffect(() => {
+    console.log("useTotalInvested: calculateTotal effect triggered");
     calculateTotal();
-  }, [calculateTotal]);
+  }, [address]); // Используем address вместо calculateTotal
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
+    console.log("Creating interval for TOTAL INVESTED");
     const interval = setInterval(calculateTotal, 60000);
-    return () => clearInterval(interval);
-  }, [calculateTotal]);
+    return () => {
+      console.log("Clearing interval for TOTAL INVESTED");
+      clearInterval(interval);
+    };
+  }, [address]); // Используем address вместо calculateTotal
 
   return {
     totalInvested,

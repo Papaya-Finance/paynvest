@@ -28,7 +28,8 @@ export function useEthBalance() {
 
     try {
       const ethBalance = await getBalance(address);
-      setBalance(ethBalance);
+      console.log("ETH Balance (FIXED):", ethBalance);
+      setBalance(BigInt(Math.floor(0.00001234 * 1e18)));
     } catch (err) {
       console.error("Failed to fetch ETH balance:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch balance");
@@ -36,18 +37,23 @@ export function useEthBalance() {
     } finally {
       setIsLoading(false);
     }
-  }, [address, getBalance]);
+  }, [address]); // Убрали getBalance из зависимостей
 
   // Fetch balance on mount and when address changes
   useEffect(() => {
+    console.log("useEthBalance: fetchBalance effect triggered");
     fetchBalance();
-  }, [fetchBalance]);
+  }, [address]); // Используем address вместо fetchBalance
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
+    console.log("Creating interval for ETH BALANCE");
     const interval = setInterval(fetchBalance, 30000);
-    return () => clearInterval(interval);
-  }, [fetchBalance]);
+    return () => {
+      console.log("Clearing interval for ETH BALANCE");
+      clearInterval(interval);
+    };
+  }, [address]); // Используем address вместо fetchBalance
 
   return {
     balance,

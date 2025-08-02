@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
+import { readContract } from "@wagmi/core";
+import { wagmiConfig } from "@/lib/wagmi";
 import { toast } from "sonner";
 import PeriodPapayaABI from "@/lib/abi/PeriodPapaya.json";
 import type { UsePeriodPapayaReturn, SubscriptionData, TotalInvestedCalculation } from "@/types";
@@ -287,28 +289,66 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
   const getSubscriptionData = useCallback(
     async (userAddress: `0x${string}`, paynvestAddress: `0x${string}`): Promise<SubscriptionData> => {
       try {
-        // TODO: Implement proper subscription data reading for wagmi v2
-        // For now, return default values
+        // TODO: Fix contract reading - temporarily commented out
+        const subscriptionResult = await readContract(wagmiConfig, {
+          ...contractConfig,
+          functionName: 'subscriptions',
+          args: [userAddress, paynvestAddress],
+        });
+
+        if (!subscriptionResult) {
+          return {
+            isActive: false,
+            encodedRates: BigInt(0),
+          };
+        }
+
+        const [isActive, encodedRates] = subscriptionResult as [boolean, bigint];
+        
         return {
-          isActive: false,
-          encodedRates: BigInt(0),
+          isActive,
+          encodedRates,
         };
+        
+        // Temporary fallback
+          // return {
+          //   isActive: false,
+          //   encodedRates: BigInt(0),
+          // };
       } catch (error) {
         console.error("Failed to get subscription data:", error);
         throw error;
       }
     },
-    []
+    [contractConfig]
   );
+
+  /**
+   * Get REFILL_DAYS constant from contract
+   */
+  const getRefillDays = useCallback(async (): Promise<number> => {
+    try {
+      // TODO: Fix contract reading - temporarily commented out
+      // const refillDays = await readContract(wagmiConfig, {
+      //   ...contractConfig,
+      //   functionName: 'REFILL_DAYS',
+      // });
+      
+      // return Number(refillDays) || 7; // Default to 7 days if not available
+      return 7; // Temporary fallback
+    } catch (error) {
+      console.error("Failed to get REFILL_DAYS:", error);
+      return 7; // Default fallback
+    }
+  }, [contractConfig]);
 
   /**
    * Calculate total invested amount based on subscription data
    * @param userAddress - User's wallet address
    * @param paynvestAddress - Paynvest contract address
-   * @param refillDays - Number of days for refill calculation
    */
   const calculateTotalInvested = useCallback(
-    async (userAddress: `0x${string}`, paynvestAddress: `0x${string}`, refillDays: number): Promise<TotalInvestedCalculation> => {
+    async (userAddress: `0x${string}`, paynvestAddress: `0x${string}`): Promise<TotalInvestedCalculation> => {
       try {
         const subscriptionData = await getSubscriptionData(userAddress, paynvestAddress);
         
@@ -322,9 +362,13 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         }
 
         const decodedRates = decodeRates(subscriptionData.encodedRates);
+        const refillDays = await getRefillDays();
         const currentTime = Math.floor(Date.now() / 1000);
+        
+        // Calculate periods passed: (now() - streamStarted) / REFILL_DAYS
         const periodsPassed = Math.floor((currentTime - decodedRates.timestamp) / (refillDays * 24 * 60 * 60));
         
+        // Calculate total invested: periodsPassed * incomeRate
         const totalInvested = decodedRates.incomeAmount * BigInt(periodsPassed);
 
         return {
@@ -338,7 +382,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         throw error;
       }
     },
-    [getSubscriptionData, decodeRates]
+    [getSubscriptionData, decodeRates, getRefillDays]
   );
 
   return {
@@ -347,6 +391,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     getSubscriptionData,
     calculateTotalInvested,
     decodeRates,
+    getRefillDays,
     checkApproval,
     approveUSDC,
     subscribe,

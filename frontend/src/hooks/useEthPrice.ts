@@ -31,6 +31,7 @@ export function useEthPrice() {
       const ethPrice = data.ethereum?.usd;
       
       if (ethPrice) {
+        console.log("ETH Price (FIXED):", ethPrice);
         setPrice(ethPrice);
       } else {
         throw new Error("Invalid price data");
@@ -41,18 +42,23 @@ export function useEthPrice() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, []); // Пустой массив зависимостей - функция создается только один раз
 
   // Fetch price on mount
   useEffect(() => {
+    console.log("useEthPrice: fetchEthPrice effect triggered");
     fetchEthPrice();
-  }, [fetchEthPrice]);
+  }, []); // Пустой массив - эффект срабатывает только один раз
 
   // Auto-refresh price every 30 seconds
   useEffect(() => {
+    console.log("Creating interval for ETH PRICE");
     const interval = setInterval(fetchEthPrice, 30000);
-    return () => clearInterval(interval);
-  }, [fetchEthPrice]);
+    return () => {
+      console.log("Clearing interval for ETH PRICE");
+      clearInterval(interval);
+    };
+  }, []); // Пустой массив - интервал создается только один раз
 
   return {
     price,

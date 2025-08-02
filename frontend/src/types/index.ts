@@ -65,8 +65,9 @@ export interface UsePeriodPapayaReturn {
   withdraw: (amount: bigint) => Promise<any>;
   subscribe: (author: `0x${string}`, subscriptionAmount: bigint, projectId: number) => Promise<any>;
   getSubscriptionData: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`) => Promise<SubscriptionData>;
-  calculateTotalInvested: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`, refillDays: number) => Promise<TotalInvestedCalculation>;
+  calculateTotalInvested: (userAddress: `0x${string}`, paynvestAddress: `0x${string}`) => Promise<TotalInvestedCalculation>;
   decodeRates: (encodedRates: bigint) => DecodedRates;
+  getRefillDays: () => Promise<number>;
   checkApproval: (amount: bigint) => Promise<boolean>;
   approveUSDC: (amount?: bigint) => Promise<any>;
   isLoading: boolean;

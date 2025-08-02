@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useState, useCallback, useMemo } from "react";
+import { useAccount, useWriteContract } from "wagmi";
+import { readContract } from "@wagmi/core";
 import { toast } from "sonner";
 import PaynvestABI from "@/lib/abi/Paynvest.json";
 import type { UsePaynvestReturn } from "@/types";
+import { wagmiConfig } from "@/lib/wagmi";
 
 /**
  * Hook for interacting with Paynvest contract
@@ -16,11 +18,12 @@ export function usePaynvest(): UsePaynvestReturn {
 
   const { writeContractAsync } = useWriteContract();
 
-  // Contract configuration
-  const contractConfig = {
+  // console.log(PaynvestABI.abi);
+  // Contract configuration - мемоизирован для стабильности
+  const contractConfig = useMemo(() => ({
     address: process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`,
     abi: PaynvestABI.abi,
-  };
+  }), []); // Пустой массив - объект создается только один раз
 
   /**
    * Get user's ETH balance from Paynvest contract using balanceOf method
@@ -29,20 +32,20 @@ export function usePaynvest(): UsePaynvestReturn {
   const getBalance = useCallback(
     async (userAddress: `0x${string}`) => {
       try {
-        const { readContract } = await import("wagmi");
-        const balance = await readContract({
-          ...contractConfig,
-          functionName: "balanceOf",
-          args: [userAddress],
-        });
-        
-        return balance as bigint;
+        // const balance = await readContract(wagmiConfig, {
+        //   ...contractConfig,
+        //   functionName: "balanceOf",
+        //   args: [userAddress],
+        // });
+        // console.log(balance);
+        // return balance as bigint;
+        return BigInt(0); // Temporary fallback
       } catch (error) {
         console.error("Failed to get balance:", error);
         throw error;
       }
     },
-    [contractConfig]
+    [] // Убрали contractConfig из зависимостей
   );
 
   /**
