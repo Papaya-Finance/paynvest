@@ -15,8 +15,8 @@ import { usePaynvest } from "./usePaynvest";
  * usePapayaDCAStrategy - интеграция Papaya SDK для депозита, вывода, запуска и остановки DCA-стратегии
  */
 export function usePapayaDCAStrategy() {
-  const [strategies, setStrategies] = useLocalStorage<DCAStrategy[]>("dca-strategies", []);
-  const [transactions, setTransactions] = useLocalStorage<Transaction[]>("dca-transactions", []);
+  const [strategies, setStrategies] = useLocalStorage<DCAStrategy[]>("dca-strategies", [], true);
+  const [transactions, setTransactions] = useLocalStorage<Transaction[]>("dca-transactions", [], true);
   const [ethPrice, setEthPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPriceLoading, setPriceLoading] = useState(false);
@@ -61,11 +61,12 @@ export function usePapayaDCAStrategy() {
 
   // Моковые транзакции для инициализации
   useEffect(() => {
-    if (transactions.length === 0) {
+    if (transactions.length === 0 && address) {
+      // console.log(`📊 Initializing mock transactions for wallet: ${address}`);
       const mockTransactions = generateMockTransactions(5);
       setTransactions(mockTransactions);
     }
-  }, [transactions.length, setTransactions]);
+  }, [transactions.length, setTransactions, address]);
 
   // Получение цены ETH
   useEffect(() => {
@@ -88,9 +89,30 @@ export function usePapayaDCAStrategy() {
 
   // Метрики портфеля
   const portfolioMetrics = useMemo(() => {
+    // Если кошелек не подключен, возвращаем пустые метрики
+    if (!address) {
+      // console.log(`📈 No wallet connected, showing empty metrics`);
+      return {
+        totalInvested: 0,
+        totalETH: 0,
+        currentValue: 0,
+        hasActiveStrategy: false,
+        strategyStatus: "Inactive",
+      };
+    }
+
     const totalInvested = transactions.reduce((sum, tx) => sum + tx.amount, 0);
     const totalETH = transactions.reduce((sum, tx) => sum + tx.ethAmount, 0);
     const activeStrategy = strategies.find((s) => s.isActive);
+    
+    // console.log(`📈 Portfolio metrics for ${address}:`, {
+    //   transactionsCount: transactions.length,
+    //   strategiesCount: strategies.length,
+    //   totalInvested,
+    //   totalETH,
+    //   hasActiveStrategy: !!activeStrategy
+    // });
+    
     return {
       totalInvested,
       totalETH,
@@ -98,9 +120,15 @@ export function usePapayaDCAStrategy() {
       hasActiveStrategy: !!activeStrategy,
       strategyStatus: activeStrategy?.isActive ? "Active" : "Inactive",
     };
-  }, [transactions, strategies, ethPrice]);
+  }, [transactions, strategies, ethPrice, address]);
 
-  const activeStrategy = useMemo(() => strategies.find((s) => s.isActive) || null, [strategies]);
+  const activeStrategy = useMemo(() => {
+    // Если кошелек не подключен, не показываем активную стратегию
+    if (!address) {
+      return null;
+    }
+    return strategies.find((s) => s.isActive) || null;
+  }, [strategies, address]);
 
   const updateStrategy = useCallback(
     (id: string, updates: Partial<DCAStrategy>) => {

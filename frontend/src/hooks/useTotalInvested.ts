@@ -37,7 +37,7 @@ export function useTotalInvested() {
         address,
         paynvestAddress
       );
-      console.log("TOTAL INVESTED (FIXED)", result);
+      // console.log("TOTAL INVESTED (FIXED)", result);
       // setTotalInvested(result.totalInvested);
       setTotalInvested(result.totalInvested);
     } catch (err) {
@@ -51,16 +51,16 @@ export function useTotalInvested() {
 
   // Calculate on mount and when address changes
   useEffect(() => {
-    console.log("useTotalInvested: calculateTotal effect triggered");
+    // console.log("useTotalInvested: calculateTotal effect triggered");
     calculateTotal();
   }, [address]); // Используем address вместо calculateTotal
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
-    console.log("Creating interval for TOTAL INVESTED");
+    // console.log("Creating interval for TOTAL INVESTED");
     const interval = setInterval(calculateTotal, 60000);
     return () => {
-      console.log("Clearing interval for TOTAL INVESTED");
+      // console.log("Clearing interval for TOTAL INVESTED");
       clearInterval(interval);
     };
   }, [address]); // Используем address вместо calculateTotal

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useLayoutEffect, useMemo } from 'react';
 import { gsap } from 'gsap';
 
 /**
@@ -106,10 +106,10 @@ export default function InvestmentInput({
   const prevRects = useRef<Record<string, DOMRect>>({});
 
   // Форматированное значение для отображения
-  const display = formatOnType ? formatNumber(value) : value;
+  const display = useMemo(() => formatOnType ? formatNumber(value) : value, [value, formatOnType]);
 
   // Построить массив для отображения с правильными ключами
-  function getDisplayArr(raw: string) {
+  const getDisplayArr = useCallback((raw: string) => {
     const formatted = formatNumber(raw);
     const arr = [];
     let rawIdx = 0;
@@ -123,8 +123,8 @@ export default function InvestmentInput({
       }
     }
     return arr;
-  }
-  const displayArr = getDisplayArr(value);
+  }, []);
+  const displayArr = useMemo(() => getDisplayArr(value), [value, getDisplayArr]);
 
   // Сохраняем позиции символов перед изменением value
   const saveRects = useCallback((raw: string) => {
@@ -135,7 +135,7 @@ export default function InvestmentInput({
       if (el) rects[key] = el.getBoundingClientRect();
     });
     prevRects.current = rects;
-  }, []);
+  }, [getDisplayArr]);
 
   // Обработчик ввода с поддержкой дробей и ведущих нулей
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
