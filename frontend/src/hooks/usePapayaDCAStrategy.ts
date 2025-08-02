@@ -20,7 +20,7 @@ export function usePapayaDCAStrategy() {
   const [ethPrice, setEthPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPriceLoading, setPriceLoading] = useState(false);
-  const [papayaSDK, setPapayaSDK] = useState<any>(null);
+  const [papayaSDK, setPapayaSDK] = useState<InstanceType<typeof PapayaSDK> | null>(null);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const { deposit: depositPeriodPapaya, subscribe } = usePeriodPapaya();
@@ -436,10 +436,8 @@ export function usePapayaDCAStrategy() {
           provider
         );
         
-        // Get contract address - use hardcoded address if SDK method doesn't exist
-        const contractAddress = papayaSDK.getContractAddress ? 
-          await papayaSDK.getContractAddress() : 
-          "0x43CFA1D8bd93179D89BF7bF3268E5861385a1c96"; // Papaya contract address
+        // Get contract address - use hardcoded address since SDK method is private
+        const contractAddress = process.env.NEXT_PUBLIC_PERIOD_PAPAYA_CONTRACT_ADDRESS as `0x${string}`; // Papaya contract address
         
         const allowance = await usdcContract.allowance(address, contractAddress);
         // console.log("Current allowance:", allowance.toString());
@@ -489,10 +487,8 @@ export function usePapayaDCAStrategy() {
         const infiniteAmount = ethers.MaxUint256;
         // console.log("Approving infinite amount:", infiniteAmount.toString());
         
-        // Get contract address - use hardcoded address if SDK method doesn't exist
-        const contractAddress = papayaSDK.getContractAddress ? 
-          await papayaSDK.getContractAddress() : 
-          "0x43CFA1D8bd93179D89BF7bF3268E5861385a1c96"; // Papaya contract address
+        // Get contract address - use hardcoded address since SDK method is private
+        const contractAddress = process.env.NEXT_PUBLIC_PERIOD_PAPAYA_CONTRACT_ADDRESS as `0x${string}`; // Papaya contract address
         
         const tx = await usdcContract.approve(contractAddress, infiniteAmount);
         // console.log("Approval transaction:", tx.hash);

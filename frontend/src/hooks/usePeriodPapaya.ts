@@ -117,7 +117,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     async (author: `0x${string}`, subscriptionAmount: bigint, projectId: number) => {
       if (!address) {
         toast.error("Please connect your wallet first");
-        return;
+        throw new Error("Wallet not connected");
       }
 
       setIsLoading(true);
@@ -149,7 +149,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     async (amount: bigint = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935")) => {
       if (!address) {
         toast.error("Please connect your wallet first");
-        return;
+        throw new Error("Wallet not connected");
       }
 
       setIsLoading(true);
@@ -183,7 +183,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     async (amount: bigint, isPermit2: boolean = false) => {
       if (!address) {
         toast.error("Please connect your wallet first");
-        return;
+        throw new Error("Wallet not connected");
       }
 
       setIsLoading(true);
@@ -216,7 +216,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
     async (amount: bigint) => {
       if (!address) {
         toast.error("Please connect your wallet first");
-        return;
+        throw new Error("Wallet not connected");
       }
 
       setIsLoading(true);
@@ -241,7 +241,7 @@ export function usePeriodPapaya(): UsePeriodPapayaReturn {
         
         // Check if it's a contract error
         if (error && typeof error === 'object' && 'message' in error) {
-          const errorMessage = (error as any).message;
+          const errorMessage = (error as { message: string }).message;
           console.error("Error message:", errorMessage);
           
           if (errorMessage.includes("insufficient balance") || errorMessage.includes("InsufficialBalance")) {

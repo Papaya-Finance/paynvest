@@ -2,11 +2,9 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useAccount, useWriteContract } from "wagmi";
-import { readContract } from "@wagmi/core";
 import { toast } from "sonner";
 import PaynvestABI from "@/lib/abi/Paynvest.json";
 import type { UsePaynvestReturn } from "@/types";
-import { wagmiConfig } from "@/lib/wagmi";
 
 /**
  * Hook for interacting with Paynvest contract
@@ -18,7 +16,6 @@ export function usePaynvest(): UsePaynvestReturn {
 
   const { writeContractAsync } = useWriteContract();
 
-  // console.log(PaynvestABI.abi);
   // Contract configuration - мемоизирован для стабильности
   const contractConfig = useMemo(() => ({
     address: process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`,
@@ -56,7 +53,7 @@ export function usePaynvest(): UsePaynvestReturn {
     async (amount: bigint) => {
       if (!address) {
         toast.error("Please connect your wallet first");
-        return;
+        throw new Error("Wallet not connected");
       }
 
       setIsLoading(true);
@@ -87,7 +84,7 @@ export function usePaynvest(): UsePaynvestReturn {
   const claim = useCallback(async () => {
     if (!address) {
       toast.error("Please connect your wallet first");
-      return;
+      throw new Error("Wallet not connected");
     }
 
     setIsLoading(true);
