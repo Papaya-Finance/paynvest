@@ -237,7 +237,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                           onClick={() => {
                             const num = parseFloat(amount.replace(',', '.'));
                             if (!isNaN(num)) {
-                              handleCreateStrategy(num, 'USDT');
+                              handleCreateStrategy(num, 'USDC');
                             }
                           }}
                           disabled={isCreateStrategyDisabled()}
@@ -255,7 +255,7 @@ export function AppSection({ onBack }: AppSectionProps) {
                             <p className="text-sm text-muted-foreground">
                               {activeStrategy ? (
                                 <>
-                                  Strategy: <span className="font-semibold">{activeStrategy.amount} {activeStrategy.token}</span> every <span className="font-semibold"> in a day.</span>
+                                  Strategy: <span className="font-semibold">{activeStrategy.amount} {activeStrategy.token}</span><span className="font-semibold"> in a day.</span>
                                 </>
                               ) : (
                                 'Your DCA strategy is running automatically'

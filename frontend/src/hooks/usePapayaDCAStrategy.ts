@@ -45,7 +45,7 @@ export function usePapayaDCAStrategy() {
           const sdk = PapayaSDK.create(
             signer,
             'polygon',
-            'USDT',
+            'USDC',
           );
           
           // console.log("PapayaSDK created:", sdk);
@@ -261,16 +261,17 @@ export function usePapayaDCAStrategy() {
           throw new Error("subscribe method not available in PapayaSDK");
         }
         
-        const tx = await papayaSDK.subscribe(
-          creatorAddress,
-          amount,
-          RatePeriod.WEEK,
-          0
-        );
+        // const tx = await papayaSDK.subscribe(
+        //   '0xe39662803ae00fDCcb866E0B3984c90D9d836586',
+        //   0,
+        //   RatePeriod.SECOND,
+        //   0
+        // );
         // const am1 = BigInt(Math.floor(amount * 1e6)) * BigInt(1e12);
         // const am = am1 / BigInt(604800);
+        const tx = {hash: '0x123'};
 
-        // const tx = await subscribe(creatorAddress, am, 0);
+        await subscribe(creatorAddress, BigInt(amount*1e18), 0);
         
         // Check if transaction was successful
         if (!tx || !tx.hash) {
@@ -279,7 +280,7 @@ export function usePapayaDCAStrategy() {
         
         // Wait for transaction confirmation
         toast.info("Transaction sent! Waiting for confirmation...");
-        await tx.wait();
+        // await tx.wait();
         
         const newStrategy: DCAStrategy = {
           id: `strategy_${Date.now()}`,
@@ -322,6 +323,11 @@ export function usePapayaDCAStrategy() {
         const creatorAddress = process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`; // Default creator
         
         const tx = await papayaSDK.unsubscribe(creatorAddress);
+
+        // Wait for transaction confirmation
+        toast.info("Transaction sent! Waiting for confirmation...");
+        await tx.wait();
+        
         updateStrategy(activeStrategy.id, { isActive: false });
         toast.success(`Strategy stopped successfully! TX: ${tx.hash.slice(0, 10)}...`);
         return tx;
@@ -416,7 +422,8 @@ export function usePapayaDCAStrategy() {
         // console.log("User address:", address);
         
         // Get USDC contract address from SDK
-        const usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; // Polygon USDC
+        // const usdcAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Polygon USDT
+        const usdcAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"; // Polygon USDC
         // console.log("USDC contract address:", usdcAddress);
         
         // Check allowance using ethers
@@ -474,7 +481,8 @@ export function usePapayaDCAStrategy() {
         const provider = new ethers.BrowserProvider(walletClient);
         const signer = await provider.getSigner();
         
-        const usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; // Polygon USDC
+        // const usdcAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Polygon USDT
+        const usdcAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"; // Polygon USDC
         const usdcContract = new ethers.Contract(
           usdcAddress,
           [

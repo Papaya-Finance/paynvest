@@ -147,7 +147,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
 
   const getBalance = () => {
     if (mode === "deposit") {
-      return usdt?.formatted || "0";
+      return usdc?.formatted || "0";
     } else {
       return papaya?.formatted || "0";
     }
@@ -199,7 +199,7 @@ export function PapayaDialog({ isOpen, onClose, mode }: PapayaDialogProps) {
 
   const getAvailableBalance = () => {
     if (mode === "deposit") {
-      return usdc?.value || BigInt(0);
+      return usdc?.value || BigInt(0); // Available balance is USDT
     } else {
       return papaya?.value || BigInt(0);
     }

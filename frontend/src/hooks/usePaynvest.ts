@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract} from "wagmi";
+import { wagmiConfig } from "@/lib/wagmi";
+import { readContract } from "@wagmi/core";
 import { toast } from "sonner";
 import PaynvestABI from "@/lib/abi/Paynvest.json";
 import type { UsePaynvestReturn } from "@/types";
@@ -29,14 +31,14 @@ export function usePaynvest(): UsePaynvestReturn {
   const getBalance = useCallback(
     async (userAddress: `0x${string}`) => {
       try {
-        // const balance = await readContract(wagmiConfig, {
-        //   ...contractConfig,
-        //   functionName: "balanceOf",
-        //   args: [userAddress],
-        // });
-        // console.log(balance);
-        // return balance as bigint;
-        return BigInt(0); // Temporary fallback
+        const balance = await readContract(wagmiConfig, {
+          ...contractConfig,
+          functionName: "balanceOf",
+          args: [userAddress],
+        });
+        console.log(balance);
+        return balance as bigint;
+        // return BigInt(0); // Temporary fallback
       } catch (error) {
         console.error("Failed to get balance:", error);
         throw error;
