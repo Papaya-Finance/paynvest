@@ -8,7 +8,6 @@ keys.json
 gas-report
 slither-results.json
 .env
-scripts
 
 #Hardhat files
 cache

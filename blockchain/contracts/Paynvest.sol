@@ -10,6 +10,8 @@ import { IPaynvest } from "./interfaces/IPaynvest.sol";
 import { IPapayaSimplified } from "./interfaces/IPapayaSimplified.sol";
 import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
 
+import "@1inch/limit-order-protocol-contract/contracts/interfaces/IOrderMixin.sol";
+import "@1inch/limit-order-protocol-contract/contracts/libraries/TakerTraitsLib.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
@@ -28,8 +30,8 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
     IERC20 public immutable TOKEN;
     IPapayaSimplified public immutable PAPAYA;
     AggregatorV3Interface public immutable TOKEN_PAIR_PRICE_FEED; //TOKEN/WETH
-    uint256 public immutable DECIMALS_SCALE;
-    uint256 public immutable not_processed_balance;
+    // uint256 public immutable DECIMALS_SCALE;
+    // uint256 public immutable not_processed_balance;
 
     mapping(address account => User user) public users;
 
@@ -46,10 +48,15 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         PAPAYA = papaya_;
         LIMIT_ORDER_PROTOCOL = limit_order_protocol_;
         TOKEN_PAIR_PRICE_FEED = AggregatorV3Interface(TOKEN_PAIR_PRICE_FEED_);
-        DECIMALS_SCALE = 10 ** (18 - IERC20Metadata(token_).decimals());
+        // DECIMALS_SCALE = 10 ** (18 - IERC20Metadata(token_).decimals());
     }
 
-    function claim(uint256 tokenAmount) external {
+    function claim(
+        IOrderMixin.Order calldata order,
+        bytes calldata signature,
+        uint256 amount,
+        TakerTraits takerTraits
+    ) external {
         uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
 
         (, int256 tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData(); //1e18
@@ -57,13 +64,11 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         averagePartOfToken *= iteration++;
         averagePartOfToken = (averagePartOfToken + uint256(tokenPrice)) / iteration; //1e18
 
-        if((currentBalance /= DECIMALS_SCALE) <= tokenAmount) {
-            revert WrongMakingAmount();
-        }
-
         PAPAYA.withdraw(currentBalance);
 
-        TOKEN.forceApprove(owner, tokenAmount);
+        TOKEN.approve(address(LIMIT_ORDER_PROTOCOL), amount);
+
+        IOrderMixin(LIMIT_ORDER_PROTOCOL).fillContractOrder(order, signature, amount, takerTraits);
     }
 
     function withdraw(uint256 amount) external {
