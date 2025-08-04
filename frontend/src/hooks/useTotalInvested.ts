@@ -1,0 +1,74 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useAccount } from "wagmi";
+import { usePeriodPapaya } from "./usePeriodPapaya";
+
+/**
+ * Hook for calculating Total Invested amount
+ * Uses the formula from the instructions: totalStreamed = periodsPassed * incomeRate
+ */
+export function useTotalInvested() {
+  const { address } = useAccount();
+  const { calculateTotalInvested } = usePeriodPapaya();
+  const [totalInvested, setTotalInvested] = useState<bigint>(BigInt(0));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // REFILL_DAYS constant from contract (should be fetched from contract)
+  const REFILL_DAYS = 1; // Default value, should be fetched from contract
+
+  /**
+   * Calculate total invested amount
+   */
+  const calculateTotal = useCallback(async () => {
+    if (!address) {
+      setTotalInvested(BigInt(0));
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const paynvestAddress = process.env.NEXT_PUBLIC_PAYNVEST_CONTRACT_ADDRESS as `0x${string}`;
+      
+      const result = await calculateTotalInvested(
+        address,
+        paynvestAddress
+      );
+      // console.log("TOTAL INVESTED (FIXED)", result);
+      // setTotalInvested(result.totalInvested);
+      setTotalInvested(result.totalInvested);
+    } catch (err) {
+      console.error("Failed to calculate total invested:", err);
+      setError(err instanceof Error ? err.message : "Failed to calculate");
+      setTotalInvested(BigInt(0));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address]); // Убрали calculateTotalInvested из зависимостей
+
+  // Calculate on mount and when address changes
+  useEffect(() => {
+    // console.log("useTotalInvested: calculateTotal effect triggered");
+    calculateTotal();
+  }, [address]); // Используем address вместо calculateTotal
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    // console.log("Creating interval for TOTAL INVESTED");
+    const interval = setInterval(calculateTotal, 60000);
+    return () => {
+      // console.log("Clearing interval for TOTAL INVESTED");
+      clearInterval(interval);
+    };
+  }, [address]); // Используем address вместо calculateTotal
+
+  return {
+    totalInvested,
+    isLoading,
+    error,
+    refetch: calculateTotal,
+  };
+} 

@@ -1,61 +1,90 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { ArrowRight, TrendingUp, Shield, Clock } from 'lucide-react'
+import { ArrowRight, Shield, Clock, Target, Zap } from 'lucide-react'
 
 interface HeroSectionProps {
   onGetStarted: () => void
 }
 
+/**
+ * Hero section component with landing page content
+ * @param onGetStarted - Callback function to trigger navigation to app section
+ */
 export function HeroSection({ onGetStarted }: HeroSectionProps) {
   return (
-    <section className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-4 py-12">
-      <div className="max-w-4xl text-center">
-        <div className="mb-8 inline-flex items-center rounded-full border px-3 py-1 text-sm">
-          <TrendingUp className="mr-2 h-4 w-4" />
-          DCA Strategy for Ethereum
-        </div>
-        
-        <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-6xl">
-          Automate Your{' '}
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Ethereum
-          </span>{' '}
-          Investments
-        </h1>
-        
-        <p className="mb-8 text-xl text-muted-foreground sm:text-2xl">
-          Set up dollar-cost averaging with USDT/USDC and let smart contracts handle your ETH purchases automatically.
-        </p>
-        
-        <div className="mb-12 flex justify-center">
-          <Button size="lg" onClick={onGetStarted} className="text-lg">
-            Get Started
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          <div className="flex flex-col items-center">
-            <Shield className="mb-4 h-12 w-12 text-blue-600" />
-            <h3 className="mb-2 text-lg font-semibold">Secure</h3>
-            <p className="text-sm text-muted-foreground">
-              Smart contracts ensure your funds are safe and transactions are transparent
-            </p>
+    <section className="flex-1">
+      <div className="h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl bg-background shadow-sm flex flex-col transition-transform duration-700 px-4 py-12">
+        <div className="max-w-5xl text-center mx-auto">
+          <div className="mb-8 inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+            <Zap className="mr-2 h-4 w-4" />
+            Smart DCA Strategy for Ethereum
           </div>
-          <div className="flex flex-col items-center">
-            <Clock className="mb-4 h-12 w-12 text-green-600" />
-            <h3 className="mb-2 text-lg font-semibold">Automated</h3>
-            <p className="text-sm text-muted-foreground">
-              Set it once and let the system handle regular ETH purchases for you
-            </p>
+          
+          <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-4xl lg:text-6xl">
+            Smart DCA Strategy for <br />
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+              Ethereum
+            </span>
+          </h1>
+          
+          <p className="mb-8 max-w-2xl mx-auto text-muted-foreground text-sm leading-relaxed">
+            Eliminate market timing stress with automated dollar-cost averaging. 
+            Set your investment amount, choose your frequency, and let smart contracts 
+            handle consistent ETH purchases for optimal long-term growth.
+          </p>
+          
+          <div className="mb-16 flex justify-center">
+            <Button 
+              size="lg" 
+              onClick={onGetStarted} 
+              className="text-md px-2 py-2 h-auto font-regular"
+            >
+              Start Investing
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
-          <div className="flex flex-col items-center">
-            <TrendingUp className="mb-4 h-12 w-12 text-purple-600" />
-            <h3 className="mb-2 text-lg font-semibold">Strategic</h3>
-            <p className="text-sm text-muted-foreground">
-              Dollar-cost averaging reduces risk and smooths out market volatility
-            </p>
+          
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex flex-col items-center p-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-card/50 transition-colors duration-200">
+              <div className="mb-4 rounded-xl bg-blue-100 p-2 dark:bg-blue-900/30">
+                <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="mb-2 text-md font-semibold">Reduce Volatility Risk</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Spread investments over time to minimize the impact of market fluctuations
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-center p-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-card/50 transition-colors duration-200">
+              <div className="mb-4 rounded-xl bg-green-100 p-2 dark:bg-green-900/30">
+                <Zap className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="mb-2 text-md font-semibold">Automated Investing</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Set it once and let smart contracts handle regular purchases automatically
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-center p-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-card/50 transition-colors duration-200">
+              <div className="mb-4 rounded-xl bg-purple-100 p-2 dark:bg-purple-900/30">
+                <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="mb-2 text-md font-semibold">No Timing Stress</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Remove the guesswork and emotion from investment timing decisions
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-center p-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-card/50 transition-colors duration-200">
+              <div className="mb-4 rounded-xl bg-orange-100 p-2 dark:bg-orange-900/30">
+                <Target className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h3 className="mb-2 text-md font-semibold">Smart Execution</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Transparent smart contracts ensure secure and efficient transactions
+              </p>
+            </div>
           </div>
         </div>
       </div>
