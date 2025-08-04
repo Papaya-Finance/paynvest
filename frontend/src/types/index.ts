@@ -107,3 +107,64 @@ export interface UseEthBalanceReturn {
   error: string | null;
   refetch: () => Promise<void>;
 }
+
+// 1inch Limit Order types with FeeTakerExtension pattern
+export interface FeeExtension {
+  address: `0x${string}`
+  type: 'resolver' | 'integrator'
+  feePercent: number // in basis points (1% = 100)
+  feeReceiver: `0x${string}`
+  whitelistedTakers?: `0x${string}`[]
+}
+
+export interface LimitOrderData {
+  salt: bigint
+  maker: `0x${string}`
+  receiver: `0x${string}`
+  makerAsset: `0x${string}`
+  takerAsset: `0x${string}`
+  makingAmount: bigint
+  takingAmount: bigint
+  extension: `0x${string}`
+  makerTraits: `0x${string}`
+}
+
+export interface OneInchOrder {
+  id: string
+  orderHash: string
+  maker: `0x${string}`
+  makerAsset: `0x${string}`
+  takerAsset: `0x${string}`
+  makerAmount: string
+  takerAmount: string
+  expiry: number
+  status: 'pending' | 'active' | 'filled' | 'cancelled' | 'expired'
+  signature?: string
+  createdAt: number
+  txHash?: string
+  feeExtension?: FeeExtension
+}
+
+export interface OneInchOrderParams {
+  sellAmount: string // Amount of USDC to sell
+  buyAmount: string  // Minimum amount of WETH to buy
+  expiry?: number    // Expiry time (default 7 days)
+  feeExtension?: FeeExtension
+}
+
+export interface UseOneInchLimitOrderReturn {
+  createOrder: (feeExtension?: FeeExtension) => Promise<void>
+  cancelOrder: (orderHash: string) => Promise<void>
+  checkUSDCAllowance: (amount: bigint) => Promise<boolean>
+  approveUSDC: (amount: bigint) => Promise<any>
+  currentOrder: OneInchOrder | null
+  isCreating: boolean
+  isCancelling: boolean
+  error: string | null
+  // Fee calculation methods
+  getTakingAmount: (taker: `0x${string}`, makingAmount?: bigint) => bigint
+  getMakingAmount: (taker: `0x${string}`, takingAmount?: bigint) => bigint
+  getResolverFee: (taker: `0x${string}`, makingAmount?: bigint) => bigint
+  getIntegratorFee: (taker: `0x${string}`, makingAmount?: bigint) => bigint
+  getProtocolFee: (taker: `0x${string}`, makingAmount?: bigint) => bigint
+}
