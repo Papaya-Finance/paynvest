@@ -10,21 +10,29 @@ import { IPaynvest } from "./interfaces/IPaynvest.sol";
 import { IPapayaSimplified } from "./interfaces/IPapayaSimplified.sol";
 import { IPapayaNotification } from "./interfaces/IPapayaNotification.sol";
 
-import "@1inch/limit-order-protocol-contract/contracts/interfaces/IOrderMixin.sol";
-import "@1inch/limit-order-protocol-contract/contracts/libraries/TakerTraitsLib.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
+import { UniversalRouter } from "@uniswap/universal-router/contracts/UniversalRouter.sol";
+import { Commands } from "@uniswap/universal-router/contracts/libraries/Commands.sol";
+import { IPoolManager } from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import { IV4Router } from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
+import { Actions } from "@uniswap/v4-periphery/src/libraries/Actions.sol";
+import { StateLibrary } from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
+contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
+    using StateLibrary for IPoolManager;
     using SafeERC20 for IERC20;
 
     uint32 public constant CLAIM_PERIOD = 30.5 days; //NOTE: This constant MUST be equal with crt Papaya`s period
 
-    uint32 initialTimestamp;
-    uint32 iteration;
-    uint256 averagePartOfToken;
+    uint32 initialTimestamp; //TODO: UPDATE
+    uint32 iteration; //TODO: UPDATE
+    uint256 averagePartOfToken; //TODO: UPDATE
 
-    address public immutable owner;
+    UniversalRouter public immutable ROUTER;
+    IPoolManager public immutable POOL_MANAGER;
+
+    address public immutable OWNER;
     address public immutable LIMIT_ORDER_PROTOCOL;
     IERC20 public immutable WETH;
     IERC20 public immutable TOKEN;
@@ -40,35 +48,67 @@ contract Paynvest is IERC1271, IPaynvest, IPapayaNotification {
         address token_, 
         address TOKEN_PAIR_PRICE_FEED_,
         IPapayaSimplified papaya_,
-        address limit_order_protocol_
+        address router_,
+        address pool_manager_
     ) {
         owner = msg.sender;
         TOKEN = IERC20(token_);
         WETH = weth_;
         PAPAYA = papaya_;
-        LIMIT_ORDER_PROTOCOL = limit_order_protocol_;
+        ROUTER = router_;
+        POOL_MANAGER = pool_manager_;
         TOKEN_PAIR_PRICE_FEED = AggregatorV3Interface(TOKEN_PAIR_PRICE_FEED_);
         // DECIMALS_SCALE = 10 ** (18 - IERC20Metadata(token_).decimals());
     }
 
     function claim(
-        IOrderMixin.Order calldata order,
-        bytes calldata signature,
-        uint256 amount,
-        TakerTraits takerTraits
+        PoolKey calldata key,
+        uint128 amountIn,
+        uint256 minAmountOut,
     ) external {
         uint256 currentBalance = (PAPAYA.balanceOf(address(this)));
+        require(currentBalance >= amountIn, "PAPAYA: Insufficial balance");
 
+        bytes memory commands = abi.encodePacked(uint8(Commands.V4_SWAP));
+        bytes[] memory inputs = new bytes[](1);
+
+        bytes memory actions = abi.encodePacked(
+            uint8(Actions.SWAP_EXACT_IN_SINGLE),
+            uint8(Actions.SETTLE_ALL),
+            uint8(Actions.TAKE_ALL)
+        );
+
+        params[0] = abi.encode(
+            IV4Router.ExactInputSingleParams({
+                poolKey: key,
+                zeroForOne: true,      //TODO: Check that Token address is bigger than weth      
+                amountIn: amountIn,          
+                amountOutMinimum: minAmountOut, 
+                hookData: bytes("")             
+            })
+        );
+
+        params[1] = abi.encode(key.currency0, amountIn);
+        params[2] = abi.encode(key.currency1, minAmountOut);
+        
+        bytes[] memory inputs = new bytes[](1);
+        inputs[0] = abi.encode(actions, params);
+
+        uint256 deadline = block.timestamp + 20;
+    
         (, int256 tokenPrice, , , ) = TOKEN_PAIR_PRICE_FEED.latestRoundData(); //1e18
 
         averagePartOfToken *= iteration++;
         averagePartOfToken = (averagePartOfToken + uint256(tokenPrice)) / iteration; //1e18
 
-        PAPAYA.withdraw(currentBalance);
+        PAPAYA.withdraw(amountIn);
 
-        TOKEN.approve(address(LIMIT_ORDER_PROTOCOL), amount);
+        TOKEN.approve(address(ROUTER), amountIn);
+        ROUTER.execute(commands, inputs, deadline);
 
-        IOrderMixin(LIMIT_ORDER_PROTOCOL).fillContractOrder(order, signature, amount, takerTraits);
+        amountOut = key.currency1.balanceOf(address(this));
+        require(amountOut >= minAmountOut, "Insufficient output amount");
+        return amountOut;
     }
 
     function withdraw(uint256 amount) external {
